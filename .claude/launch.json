@@ -7,6 +7,12 @@
       "runtimeArgs": ["run", "dev"],
       "cwd": "client",
       "port": 5173
+    },
+    {
+      "name": "collection-static",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["collection-app/serve.js"],
+      "port": 5174
     }
   ]
 }
