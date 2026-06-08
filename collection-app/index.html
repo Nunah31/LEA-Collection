@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ניהול גבייה</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+html,body{height:100%}
+body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:#f4f5f8;color:#2b2b33;direction:rtl}
+button{font-family:inherit;cursor:pointer;border:1px solid #cfd3da;background:#fff;border-radius:8px;padding:8px 14px;font-size:14px}
+button:hover{background:#eef0f5}
+button:disabled{opacity:.5;cursor:default}
+button.danger{border-color:#e3a3a3;color:#b3261e}
+button.danger:hover{background:#fbe9e9}
+button.connected{border-color:#67c587;color:#1a7f3c}
+input,textarea,select{font-family:inherit;font-size:14px;padding:7px 10px;border:1px solid #cfd3da;border-radius:6px;background:#fff;color:inherit}
+a{color:#2563eb}
+.app{max-width:1300px;margin:0 auto;padding:16px 20px 60px}
+.topbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.topbar h1{margin:0;font-size:22px}
+.topbar-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.client-select{min-width:160px}
+.sync-msg{background:#eef4ff;border:1px solid #c8dbff;border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:14px}
+.empty-state{text-align:center;background:#fff;border-radius:12px;padding:50px 20px;border:1px dashed #cfd3da}
+.reminders-bar{margin-bottom:14px}
+.reminders-toggle{background:#fff7e6;border-color:#f0c779;width:100%;text-align:right;font-weight:600}
+.reminders-list{list-style:none;margin:6px 0 0;padding:0;background:#fff;border:1px solid #eadfca;border-radius:8px;overflow:hidden}
+.reminders-list li{display:flex;gap:14px;padding:8px 14px;border-bottom:1px solid #f1ede3;cursor:pointer;font-size:14px}
+.reminders-list li:hover{background:#fffaf0}
+.reminders-list li:last-child{border-bottom:none}
+.rem-date{color:#b3261e;font-weight:600;min-width:90px}
+.rem-client{font-weight:600;min-width:110px}
+.rem-name{color:#555}
+.rem-task{color:#888;flex:1}
+.items-table-wrap{background:#fff;border-radius:12px;padding:16px;border:1px solid #e3e5ea}
+.table-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.table-toolbar h2{margin:0;font-size:18px;flex:1}
+.search{min-width:240px}
+.add-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;background:#f8f9fc;border:1px solid #e3e5ea;border-radius:10px;padding:14px;margin-bottom:16px}
+.add-form label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:#555}
+.add-form .form-actions{grid-column:1/-1}
+.table-scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:8px 10px;border-bottom:1px solid #eee;text-align:right;white-space:nowrap}
+th{background:#f8f9fc;position:sticky;top:0;font-weight:600;color:#444}
+tr.overdue td:nth-child(2){color:#b3261e;font-weight:700}
+tr.overdue{background:#fff7f7}
+td input{width:120px}
+.actions-cell{display:flex;gap:4px;white-space:nowrap}
+.btn-link{display:inline-flex;align-items:center;justify-content:center;border:1px solid #cfd3da;border-radius:8px;padding:6px 9px;text-decoration:none;background:#fff}
+.btn-link.wa:hover{background:#e7f9ee;border-color:#67c587}
+.btn-link.mail:hover{background:#eef4ff;border-color:#93b8ff}
+.empty{color:#888}
+.modal-backdrop{position:fixed;inset:0;background:rgba(20,20,30,.4);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal{background:#fff;border-radius:14px;padding:22px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto}
+.modal h2{margin-top:0}
+.modal .hint{color:#777;font-size:13px}
+.modal-actions{margin-top:16px;display:flex;justify-content:flex-end;gap:8px}
+.client-form{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.client-form label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:#555}
+.form-actions{display:flex;gap:8px}
+.error{color:#b3261e;font-size:13px}
+.client-list{list-style:none;padding:0;margin:0}
+.client-list li{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid #eee;border-radius:8px;margin-bottom:8px}
+.client-row{display:flex;align-items:center;gap:8px}
+.client-row-actions{display:flex;gap:6px}
+.badge{font-size:11px;padding:3px 8px;border-radius:999px;background:#eee;color:#777}
+.badge.ok{background:#e1f6e8;color:#1a7f3c}
+.step{margin-bottom:14px}
+.step h3{margin-bottom:6px;font-size:15px}
+.instructions{font-size:13.5px;line-height:1.6;padding-inline-start:20px}
+.instructions code{background:#f1f1f5;padding:1px 6px;border-radius:4px}
+.qr-box{text-align:center;margin:10px 0}
+.share-link{direction:ltr;text-align:left;word-break:break-all;background:#f6f7fb;border-radius:6px;padding:8px;font-size:12.5px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+'use strict';
+
+/* =========================== Constants & template ============================ */
+// IMPORTANT: replace with your own Google OAuth Client ID (see "חיבור ל-Google" instructions in app)
+const GOOGLE_CLIENT_ID = localStorage.getItem('collection_google_client_id') || '';
+const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
+
+const COLUMNS = [
+  { key: 'task', header: 'משימה' },
+  { key: 'follow_up_date', header: 'תאריך מעקב', type: 'date' },
+  { key: 'customer_name', header: 'שם לקוח' },
+  { key: 'customer_phone', header: 'נייד לקוח', dir: 'ltr' },
+  { key: 'customer_email', header: 'כתובת מייל', dir: 'ltr' },
+  { key: 'debt_amount', header: 'סכום החוב' },
+  { key: 'invoice_number', header: "מס' חשבונית" },
+  { key: 'balance_due', header: 'יתרה לתשלום' },
+  { key: 'payment_method', header: 'אמצעי תשלום' },
+  { key: 'notes', header: 'הערות' },
+];
+
+/* =========================== Storage helpers ============================ */
+const LS = {
+  get(key, fallback) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; } },
+  set(key, value) { localStorage.setItem(key, JSON.stringify(value)); },
+};
+
+function getClients() { return LS.get('collection_clients', []); }
+function setClients(list) { LS.set('collection_clients', list); }
+function getItems(clientId) { return LS.get('collection_items_' + clientId, []); }
+function setItems(clientId, items) { LS.set('collection_items_' + clientId, items); }
+function getLastSync(clientId) { return localStorage.getItem('collection_lastsync_' + clientId) || null; }
+function setLastSync(clientId) { localStorage.setItem('collection_lastsync_' + clientId, new Date().toISOString()); }
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function nowIso() { return new Date().toISOString(); }
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+
+function extractSheetId(input) {
+  if (!input) return null;
+  const m = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if (m) return m[1];
+  if (/^[a-zA-Z0-9-_]{20,}$/.test(input.trim())) return input.trim();
+  return null;
+}
+
+/* =========================== Google auth (browser OAuth) ============================ */
+let gTokenClient = null;
+let gAccessToken = sessionStorage.getItem('collection_g_token') || null;
+let gTokenExpiry = Number(sessionStorage.getItem('collection_g_token_exp') || 0);
+
+function isGoogleAuthorized() {
+  return !!gAccessToken && Date.now() < gTokenExpiry;
+}
+
+function initGoogleAuth() {
+  if (!window.google || !GOOGLE_CLIENT_ID) return;
+  gTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: SHEETS_SCOPE,
+    callback: (resp) => {
+      if (resp && resp.access_token) {
+        gAccessToken = resp.access_token;
+        gTokenExpiry = Date.now() + (Number(resp.expires_in || 3500) * 1000);
+        sessionStorage.setItem('collection_g_token', gAccessToken);
+        sessionStorage.setItem('collection_g_token_exp', String(gTokenExpiry));
+        render();
+      }
+    },
+  });
+}
+
+function connectGoogle() {
+  if (!GOOGLE_CLIENT_ID) { alert('יש להגדיר תחילה Client ID של Google (לחצי על "חיבור ל-Google")'); return; }
+  if (!gTokenClient) initGoogleAuth();
+  if (gTokenClient) gTokenClient.requestAccessToken({ prompt: isGoogleAuthorized() ? '' : 'consent' });
+}
+
+async function ensureGoogleToken() {
+  if (isGoogleAuthorized()) return true;
+  return new Promise((resolve) => {
+    if (!gTokenClient) initGoogleAuth();
+    if (!gTokenClient) return resolve(false);
+    const original = gTokenClient.callback;
+    gTokenClient.callback = (resp) => {
+      gTokenClient.callback = original;
+      if (resp && resp.access_token) {
+        gAccessToken = resp.access_token;
+        gTokenExpiry = Date.now() + (Number(resp.expires_in || 3500) * 1000);
+        sessionStorage.setItem('collection_g_token', gAccessToken);
+        sessionStorage.setItem('collection_g_token_exp', String(gTokenExpiry));
+        resolve(true);
+      } else resolve(false);
+    };
+    gTokenClient.requestAccessToken({ prompt: '' });
+  });
+}
+
+/* =========================== Sheets API ============================ */
+async function sheetsGet(spreadsheetId, range) {
+  const ok = await ensureGoogleToken();
+  if (!ok) throw new Error('לא מחוברת לחשבון Google');
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${gAccessToken}` } });
+  if (!res.ok) throw new Error('שגיאה בקריאת הטבלה (' + res.status + ')');
+  return res.json();
+}
+async function sheetsUpdate(spreadsheetId, range, values) {
+  const ok = await ensureGoogleToken();
+  if (!ok) throw new Error('לא מחוברת לחשבון Google');
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?valueInputOption=RAW`;
+  const res = await fetch(url, { method: 'PUT', headers: { Authorization: `Bearer ${gAccessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ values }) });
+  if (!res.ok) throw new Error('שגיאה בעדכון הטבלה (' + res.status + ')');
+  return res.json();
+}
+async function sheetsBatchUpdate(spreadsheetId, data) {
+  const ok = await ensureGoogleToken();
+  if (!ok) throw new Error('לא מחוברת לחשבון Google');
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`;
+  const res = await fetch(url, { method: 'POST', headers: { Authorization: `Bearer ${gAccessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ valueInputOption: 'RAW', data }) });
+  if (!res.ok) throw new Error('שגיאה בעדכון הטבלה (' + res.status + ')');
+  return res.json();
+}
+async function sheetsAppend(spreadsheetId, range, values) {
+  const ok = await ensureGoogleToken();
+  if (!ok) throw new Error('לא מחוברת לחשבון Google');
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`;
+  const res = await fetch(url, { method: 'POST', headers: { Authorization: `Bearer ${gAccessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ values }) });
+  if (!res.ok) throw new Error('שגיאה בהוספת שורה לטבלה (' + res.status + ')');
+  return res.json();
+}
+
+const RANGE_FOR = (tab) => `${tab || 'Sheet1'}!A1:J`;
+function rowToItem(row) { const o = {}; COLUMNS.forEach((c, i) => o[c.key] = row[i] ?? ''); return o; }
+function itemToRow(item) { return COLUMNS.map((c) => item[c.key] ?? ''); }
+function rowsEqual(a, b) { return COLUMNS.every((c) => (a[c.key] ?? '') === (b[c.key] ?? '')); }
+
+/* =========================== Sync logic (bidirectional) ============================ */
+async function syncClient(client) {
+  if (!client.sheetId) throw new Error('ללקוח אין קישור ל-Google Sheet');
+  const tab = client.sheetTab || 'Sheet1';
+  const range = RANGE_FOR(tab);
+  const res = await sheetsGet(client.sheetId, range);
+  const values = res.values || [];
+  const dataRows = values.slice(1);
+
+  let local = getItems(client.id);
+  const bySheetRow = new Map(local.filter(i => i.sheetRow != null).map(i => [i.sheetRow, i]));
+  const lastSync = getLastSync(client.id);
+
+  let pulled = 0, updated = 0;
+  const seen = new Set();
+
+  for (let i = 0; i < dataRows.length; i++) {
+    const sheetRow = i + 2;
+    const row = dataRows[i];
+    if (!row || row.every(v => !v || String(v).trim() === '')) continue;
+    seen.add(sheetRow);
+    const sheetItem = rowToItem(row);
+    const loc = bySheetRow.get(sheetRow);
+    if (!loc) {
+      local.push({ id: uid(), sheetRow, updatedAt: nowIso(), ...sheetItem });
+      pulled++;
+    } else if (!rowsEqual(loc, sheetItem)) {
+      const localChanged = !lastSync || (loc.updatedAt && loc.updatedAt > lastSync);
+      if (!localChanged) {
+        Object.assign(loc, sheetItem);
+        loc.updatedAt = nowIso();
+        updated++;
+      }
+      // else: local wins, will be pushed below
+    }
+  }
+
+  // Push local-only (new) items
+  const toAppend = local.filter(it => it.sheetRow == null);
+  if (toAppend.length) {
+    const startRow = values.length + 1;
+    await sheetsAppend(client.sheetId, range, toAppend.map(itemToRow));
+    toAppend.forEach((it, idx) => { it.sheetRow = startRow + idx; });
+  }
+
+  // Push local-changed-since-sync items that differ from sheet
+  const toUpdate = local.filter(it => {
+    if (it.sheetRow == null || toAppend.includes(it)) return false;
+    const idx = it.sheetRow - 2;
+    const sheetRow = dataRows[idx];
+    const localChanged = !lastSync || (it.updatedAt && it.updatedAt > lastSync);
+    if (!sheetRow) return localChanged;
+    return localChanged && !rowsEqual(it, rowToItem(sheetRow));
+  });
+  if (toUpdate.length) {
+    await sheetsBatchUpdate(client.sheetId, toUpdate.map(it => ({ range: `${tab}!A${it.sheetRow}:J${it.sheetRow}`, values: [itemToRow(it)] })));
+  }
+
+  setItems(client.id, local);
+  setLastSync(client.id);
+  return { pulled, updated, pushedNew: toAppend.length, pushedUpdates: toUpdate.length };
+}
+
+async function pushSingleItem(client, item) {
+  if (!client.sheetId || !isGoogleAuthorized()) return;
+  const tab = client.sheetTab || 'Sheet1';
+  try {
+    if (item.sheetRow) {
+      await sheetsUpdate(client.sheetId, `${tab}!A${item.sheetRow}:J${item.sheetRow}`, [itemToRow(item)]);
+    } else {
+      const res = await sheetsGet(client.sheetId, RANGE_FOR(tab));
+      const startRow = (res.values || []).length + 1;
+      await sheetsAppend(client.sheetId, RANGE_FOR(tab), [itemToRow(item)]);
+      item.sheetRow = startRow;
+    }
+  } catch (e) { /* best-effort; will be retried on next full sync */ }
+}
+
+/* =========================== Message helpers (WhatsApp / Email) ============================ */
+function buildMessage(item) {
+  const name = item.customer_name || 'לקוח/ה יקר/ה';
+  const amount = item.balance_due || item.debt_amount;
+  let msg = `שלום ${name},\nתזכורת ידידותית בנוגע לחוב הפתוח`;
+  if (item.invoice_number) msg += ` (חשבונית מס' ${item.invoice_number})`;
+  if (amount) msg += `.\nהיתרה לתשלום עומדת על ${amount} ₪`;
+  msg += '.\nנשמח להסדרת התשלום בהקדם. תודה!';
+  return msg;
+}
+function normalizePhone(phone) {
+  if (!phone) return '';
+  let p = String(phone).replace(/[^0-9+]/g, '');
+  if (p.startsWith('+')) return p.slice(1);
+  if (p.startsWith('0')) return '972' + p.slice(1);
+  return p;
+}
+function buildWhatsAppLink(item) {
+  const phone = normalizePhone(item.customer_phone);
+  const text = encodeURIComponent(buildMessage(item));
+  return phone ? `https://wa.me/${phone}?text=${text}` : `https://wa.me/?text=${text}`;
+}
+function buildMailtoLink(item) {
+  const subject = encodeURIComponent(`תזכורת לתשלום${item.invoice_number ? ' - חשבונית ' + item.invoice_number : ''}`);
+  const body = encodeURIComponent(buildMessage(item));
+  return `mailto:${item.customer_email || ''}?subject=${subject}&body=${body}`;
+}
+function isOverdue(d) { return !!d && d <= todayStr(); }
+function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* =========================== App State ============================ */
+const state = {
+  clients: getClients(),
+  activeClientId: localStorage.getItem('collection_active_client') || '',
+  showClientManager: false,
+  showGoogleSetup: false,
+  showAddForm: false,
+  editingId: null,
+  search: '',
+  remindersOpen: false,
+  syncing: false,
+  syncMsg: '',
+};
+if (!state.activeClientId || !state.clients.some(c => c.id === state.activeClientId)) {
+  state.activeClientId = state.clients[0]?.id || '';
+}
+
+function activeClient() { return state.clients.find(c => c.id === state.activeClientId) || null; }
+
+function persistClients() { setClients(state.clients); }
+function setActiveClient(id) { state.activeClientId = id; localStorage.setItem('collection_active_client', id); state.showAddForm = false; state.editingId = null; render(); }
+
+/* =========================== Reminders ============================ */
+function getAllReminders() {
+  const today = todayStr();
+  const out = [];
+  state.clients.forEach(c => {
+    getItems(c.id).forEach(it => {
+      if (it.follow_up_date && it.follow_up_date <= today) out.push({ ...it, client_id: c.id, client_name: c.name });
+    });
+  });
+  out.sort((a, b) => (a.follow_up_date || '').localeCompare(b.follow_up_date || ''));
+  return out;
+}
+
+/* =========================== Rendering ============================ */
+const root = document.getElementById('root');
+
+function render() {
+  const reminders = getAllReminders();
+  const ac = activeClient();
+
+  root.innerHTML = `
+    <div class="app">
+      <header class="topbar">
+        <h1>📋 ניהול גבייה</h1>
+        <div class="topbar-controls">
+          <select id="clientSelect" class="client-select">
+            ${state.clients.length === 0 ? '<option value="">אין לקוחות עדיין</option>' : ''}
+            ${state.clients.map(c => `<option value="${c.id}" ${c.id === state.activeClientId ? 'selected' : ''}>${escapeHtml(c.name)}</option>`).join('')}
+          </select>
+          <button id="btnClients">⚙️ ניהול לקוחות</button>
+          <button id="btnGoogle" class="${isGoogleAuthorized() ? 'connected' : ''}">${isGoogleAuthorized() ? '🟢 מחובר ל-Google' : '🔌 חיבור ל-Google Sheets'}</button>
+          ${ac && ac.sheetId ? `<button id="btnSync" ${state.syncing ? 'disabled' : ''}>${state.syncing ? 'מסנכרן…' : '🔄 סנכרן עכשיו'}</button>` : ''}
+          <button id="btnShare">🔗 שיתוף הקישור</button>
+        </div>
+      </header>
+
+      ${state.syncMsg ? `<div class="sync-msg">${escapeHtml(state.syncMsg)}</div>` : ''}
+
+      ${reminders.length ? `
+        <div class="reminders-bar">
+          <button class="reminders-toggle" id="remindersToggle">🔔 ${reminders.length} תזכורות לטיפול היום או באיחור ${state.remindersOpen ? '▲' : '▼'}</button>
+          ${state.remindersOpen ? `
+            <ul class="reminders-list">
+              ${reminders.map(r => `
+                <li data-client="${r.client_id}">
+                  <span class="rem-date">${escapeHtml(r.follow_up_date)}</span>
+                  <span class="rem-client">${escapeHtml(r.client_name)}</span>
+                  <span class="rem-name">${escapeHtml(r.customer_name || '—')}</span>
+                  <span class="rem-task">${escapeHtml(r.task || '')}</span>
+                </li>`).join('')}
+            </ul>` : ''}
+        </div>` : ''}
+
+      <main>
+        ${!ac ? `
+          <div class="empty-state">
+            <p>עדיין אין לקוחות. לחצי על "ניהול לקוחות" כדי להוסיף לקוח חדש (אפשר לקשר אותו לקובץ Google Sheets).</p>
+            <button id="btnAddClientEmpty">➕ הוספת לקוח</button>
+          </div>` : renderItemsTable(ac)}
+      </main>
+    </div>
+    ${state.showClientManager ? renderClientManager() : ''}
+    ${state.showGoogleSetup ? renderGoogleSetup() : ''}
+    ${state.showShare ? renderShare() : ''}
+  `;
+
+  bindEvents();
+}
+
+function renderItemsTable(client) {
+  const items = getItems(client.id);
+  const search = state.search.trim().toLowerCase();
+  const filtered = !search ? items : items.filter(it => [it.customer_name, it.task, it.invoice_number, it.notes].some(v => (v || '').toLowerCase().includes(search)));
+
+  return `
+    <div class="items-table-wrap">
+      <div class="table-toolbar">
+        <h2>${escapeHtml(client.name)} — רשימת גבייה</h2>
+        <input class="search" id="searchInput" placeholder="🔎 חיפוש לפי שם, משימה, מס' חשבונית…" value="${escapeHtml(state.search)}" />
+        <button id="btnToggleAdd">${state.showAddForm ? 'ביטול' : '➕ הוספת גבייה חדשה'}</button>
+      </div>
+
+      ${state.showAddForm ? `
+        <form class="add-form" id="addForm">
+          ${COLUMNS.map(f => `
+            <label>${f.header}
+              <input name="${f.key}" type="${f.type || 'text'}" dir="${f.dir || 'auto'}" />
+            </label>`).join('')}
+          <div class="form-actions"><button type="submit">💾 שמירה</button></div>
+        </form>` : ''}
+
+      ${filtered.length === 0 ? `<p class="empty">אין רשומות עדיין. אפשר להוסיף גבייה חדשה, או לסנכרן מ-Google Sheets.</p>` : `
+        <div class="table-scroll">
+          <table>
+            <thead><tr>${COLUMNS.map(f => `<th>${f.header}</th>`).join('')}<th>פעולות</th></tr></thead>
+            <tbody>
+              ${filtered.map(item => renderItemRow(item, client)).join('')}
+            </tbody>
+          </table>
+        </div>`}
+    </div>`;
+}
+
+function renderItemRow(item, client) {
+  const editing = state.editingId === item.id;
+  const overdue = isOverdue(item.follow_up_date);
+  if (editing) {
+    return `<tr class="${overdue ? 'overdue' : ''}" data-id="${item.id}">
+      ${COLUMNS.map(f => `<td dir="${f.dir || 'auto'}"><input data-field="${f.key}" type="${f.type || 'text'}" dir="${f.dir || 'auto'}" value="${escapeHtml(item[f.key] || '')}" /></td>`).join('')}
+      <td class="actions-cell">
+        <button class="rowSave" title="שמירה">💾</button>
+        <button class="rowCancel" title="ביטול">✖️</button>
+      </td>
+    </tr>`;
+  }
+  return `<tr class="${overdue ? 'overdue' : ''}" data-id="${item.id}">
+    ${COLUMNS.map(f => `<td dir="${f.dir || 'auto'}">${escapeHtml(item[f.key] || '')}</td>`).join('')}
+    <td class="actions-cell">
+      <button class="rowEdit" title="עריכה">✏️</button>
+      <button class="rowDelete danger" title="מחיקה">🗑</button>
+      <a class="btn-link wa" href="${buildWhatsAppLink(item)}" target="_blank" rel="noreferrer" title="שליחת תזכורת בוואטסאפ">💬</a>
+      <a class="btn-link mail" href="${buildMailtoLink(item)}" title="שליחת תזכורת במייל">✉️</a>
+    </td>
+  </tr>`;
+}
+
+function renderClientManager() {
+  return `
+    <div class="modal-backdrop" id="clientBackdrop">
+      <div class="modal" id="clientModal">
+        <h2>ניהול לקוחות</h2>
+        <p class="hint">כל לקוח יכול להיות מקושר לקובץ Google Sheets נפרד משלו (הדביקי קישור לשיתוף של הקובץ). חשוב: לקובץ צריכות להיות אותן כותרות עמודה כמו בתבנית המקורית.</p>
+        <form class="client-form" id="clientForm">
+          <input type="hidden" name="editingId" value="${state.clientEditingId || ''}" />
+          <label>שם הלקוח <input name="name" placeholder="לדוגמה: קומפון" value="${escapeHtml(state.clientFormName || '')}" /></label>
+          <label>קישור ל-Google Sheet (אופציונלי) <input name="sheetUrl" dir="ltr" placeholder="https://docs.google.com/spreadsheets/d/..." value="${escapeHtml(state.clientFormUrl || '')}" /></label>
+          ${state.clientFormError ? `<div class="error">${escapeHtml(state.clientFormError)}</div>` : ''}
+          <div class="form-actions">
+            <button type="submit">${state.clientEditingId ? 'עדכון לקוח' : '➕ הוספת לקוח'}</button>
+            ${state.clientEditingId ? '<button type="button" id="cancelClientEdit">ביטול עריכה</button>' : ''}
+          </div>
+        </form>
+        <ul class="client-list">
+          ${state.clients.map(c => `
+            <li data-id="${c.id}">
+              <div class="client-row"><strong>${escapeHtml(c.name)}</strong> ${c.sheetId ? '<span class="badge ok">מקושר ל-Sheet</span>' : '<span class="badge">ללא Sheet</span>'}</div>
+              <div class="client-row-actions">
+                <button class="clientEdit">✏️ עריכה</button>
+                <button class="clientDelete danger">🗑 מחיקה</button>
+              </div>
+            </li>`).join('') || '<li class="empty">אין עדיין לקוחות</li>'}
+        </ul>
+        <div class="modal-actions"><button id="closeClientManager">סגירה</button></div>
+      </div>
+    </div>`;
+}
+
+function renderGoogleSetup() {
+  const hasClientId = !!GOOGLE_CLIENT_ID;
+  return `
+    <div class="modal-backdrop" id="googleBackdrop">
+      <div class="modal" id="googleModal">
+        <h2>חיבור ל-Google Sheets</h2>
+        ${!hasClientId ? `
+          <div class="step">
+            <h3>שלב 1: הגדרת חיבור ל-Google (חד פעמי לכל מכשיר)</h3>
+            <ol class="instructions">
+              <li>היכנסי ל-<a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer">Google Cloud Console</a> וצרי פרויקט (אם אין).</li>
+              <li>הפעילי את <strong>Google Sheets API</strong>.</li>
+              <li>במסך ההסכמה (OAuth consent screen) הוסיפי את כתובת המייל שלך כ"משתמש בדיקה".</li>
+              <li>צרי פרטי גישה מסוג <strong>OAuth client ID</strong> מסוג <strong>Web application</strong>, והוסיפי כ"Authorized JavaScript origins" את כתובת האתר הזה: <code>${location.origin}</code></li>
+              <li>הדביקי כאן את ה-Client ID שקיבלת (מסתיים ב-<code>.apps.googleusercontent.com</code>):</li>
+            </ol>
+            <input id="clientIdInput" dir="ltr" placeholder="xxxxxxxxxx.apps.googleusercontent.com" style="width:100%" />
+            <div class="form-actions" style="margin-top:8px"><button id="saveClientId">שמירה</button></div>
+          </div>` : `
+          <div class="step">
+            <h3>שלב 2: התחברות לחשבון Google</h3>
+            <p>${isGoogleAuthorized() ? '🟢 מחוברת לחשבון Google.' : 'לחצי על הכפתור ואשרי גישה לחשבון ה-Google שלך (Sheets בלבד).'}</p>
+            <button id="connectGoogleBtn">🔐 ${isGoogleAuthorized() ? 'התחברות מחדש' : 'התחברות לחשבון Google'}</button>
+            <p class="hint">החיבור נשמר רק במכשיר/דפדפן הזה (כמו ביתר האפליקציות). במכשיר חדש תצטרכי להתחבר פעם אחת.</p>
+            <button id="resetClientId">🔁 שינוי Client ID</button>
+          </div>`}
+        <div class="modal-actions"><button id="closeGoogleSetup">סגירה</button></div>
+      </div>
+    </div>`;
+}
+
+function renderShare() {
+  const url = location.href.split('#')[0];
+  return `
+    <div class="modal-backdrop" id="shareBackdrop">
+      <div class="modal" id="shareModal">
+        <h2>שיתוף קישור לאפליקציה</h2>
+        <p class="hint">שלחי את הקישור הזה לעצמך (במייל / וואטסאפ) כדי לפתוח את האפליקציה מכל מכשיר — נייד, טאבלט או מחשב אחר. בכל מכשיר חדש תצטרכי להתחבר פעם אחת לחשבון Google ולהוסיף/לבחור את הלקוח הרצוי.</p>
+        <div class="share-link">${escapeHtml(url)}</div>
+        <div class="qr-box"><img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}" /></div>
+        <div class="modal-actions">
+          <a class="btn-link wa" target="_blank" rel="noreferrer" href="https://wa.me/?text=${encodeURIComponent('קישור לאפליקציית ניהול הגבייה: ' + url)}">💬 שליחה בוואטסאפ</a>
+          <a class="btn-link mail" href="mailto:?subject=${encodeURIComponent('קישור לאפליקציית ניהול גבייה')}&body=${encodeURIComponent(url)}">✉️ שליחה במייל</a>
+          <button id="closeShare">סגירה</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* =========================== Event binding ============================ */
+function bindEvents() {
+  const $ = (sel) => root.querySelector(sel);
+  const $$ = (sel) => [...root.querySelectorAll(sel)];
+
+  $('#clientSelect')?.addEventListener('change', (e) => setActiveClient(e.target.value));
+  $('#btnClients')?.addEventListener('click', () => { state.showClientManager = true; state.clientEditingId = null; state.clientFormName = ''; state.clientFormUrl = ''; state.clientFormError = ''; render(); });
+  $('#btnAddClientEmpty')?.addEventListener('click', () => { state.showClientManager = true; render(); });
+  $('#btnGoogle')?.addEventListener('click', () => { state.showGoogleSetup = true; render(); });
+  $('#btnShare')?.addEventListener('click', () => { state.showShare = true; render(); });
+  $('#btnSync')?.addEventListener('click', doSync);
+  $('#remindersToggle')?.addEventListener('click', () => { state.remindersOpen = !state.remindersOpen; render(); });
+  $$('.reminders-list li').forEach(li => li.addEventListener('click', () => setActiveClient(li.dataset.client)));
+
+  // Items table
+  $('#searchInput')?.addEventListener('input', (e) => { state.search = e.target.value; render(); });
+  $('#btnToggleAdd')?.addEventListener('click', () => { state.showAddForm = !state.showAddForm; render(); });
+  $('#addForm')?.addEventListener('submit', onAddItem);
+  $$('.rowEdit').forEach(b => b.addEventListener('click', (e) => { state.editingId = e.target.closest('tr').dataset.id; render(); }));
+  $$('.rowCancel').forEach(b => b.addEventListener('click', () => { state.editingId = null; render(); }));
+  $$('.rowDelete').forEach(b => b.addEventListener('click', (e) => onDeleteItem(e.target.closest('tr').dataset.id)));
+  $$('.rowSave').forEach(b => b.addEventListener('click', (e) => onSaveItem(e.target.closest('tr'))));
+
+  // Client manager
+  $('#closeClientManager')?.addEventListener('click', () => { state.showClientManager = false; render(); });
+  $('#clientBackdrop')?.addEventListener('click', (e) => { if (e.target.id === 'clientBackdrop') { state.showClientManager = false; render(); } });
+  $('#clientForm')?.addEventListener('submit', onClientFormSubmit);
+  $('#cancelClientEdit')?.addEventListener('click', () => { state.clientEditingId = null; state.clientFormName = ''; state.clientFormUrl = ''; render(); });
+  $$('.clientEdit').forEach(b => b.addEventListener('click', (e) => onEditClient(e.target.closest('li').dataset.id)));
+  $$('.clientDelete').forEach(b => b.addEventListener('click', (e) => onDeleteClient(e.target.closest('li').dataset.id)));
+
+  // Google setup
+  $('#closeGoogleSetup')?.addEventListener('click', () => { state.showGoogleSetup = false; render(); });
+  $('#googleBackdrop')?.addEventListener('click', (e) => { if (e.target.id === 'googleBackdrop') { state.showGoogleSetup = false; render(); } });
+  $('#saveClientId')?.addEventListener('click', () => {
+    const v = $('#clientIdInput').value.trim();
+    if (!v.endsWith('.apps.googleusercontent.com')) { alert('נראה שזה לא Client ID תקין'); return; }
+    localStorage.setItem('collection_google_client_id', v);
+    location.reload();
+  });
+  $('#connectGoogleBtn')?.addEventListener('click', connectGoogle);
+  $('#resetClientId')?.addEventListener('click', () => { if (confirm('לאפס את ה-Client ID השמור?')) { localStorage.removeItem('collection_google_client_id'); location.reload(); } });
+
+  // Share
+  $('#closeShare')?.addEventListener('click', () => { state.showShare = false; render(); });
+  $('#shareBackdrop')?.addEventListener('click', (e) => { if (e.target.id === 'shareBackdrop') { state.showShare = false; render(); } });
+}
+
+/* =========================== Item actions ============================ */
+function onAddItem(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const item = { id: uid(), updatedAt: nowIso() };
+  COLUMNS.forEach(c => item[c.key] = (fd.get(c.key) || '').toString().trim());
+  const client = activeClient();
+  const items = getItems(client.id);
+  items.push(item);
+  setItems(client.id, items);
+  state.showAddForm = false;
+  render();
+  if (client.sheetId && isGoogleAuthorized()) pushSingleItem(client, item).then(() => { setItems(client.id, items); });
+}
+
+function onDeleteItem(id) {
+  const client = activeClient();
+  if (!confirm('למחוק את הרשומה?')) return;
+  let items = getItems(client.id);
+  items = items.filter(it => it.id !== id);
+  setItems(client.id, items);
+  render();
+}
+
+function onSaveItem(tr) {
+  const client = activeClient();
+  const id = tr.dataset.id;
+  const items = getItems(client.id);
+  const item = items.find(it => it.id === id);
+  if (!item) return;
+  tr.querySelectorAll('[data-field]').forEach(inp => { item[inp.dataset.field] = inp.value.trim(); });
+  item.updatedAt = nowIso();
+  setItems(client.id, items);
+  state.editingId = null;
+  render();
+  if (client.sheetId && isGoogleAuthorized()) pushSingleItem(client, item).then(() => setItems(client.id, items));
+}
+
+/* =========================== Client actions ============================ */
+function onClientFormSubmit(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const name = (fd.get('name') || '').toString().trim();
+  const sheetUrl = (fd.get('sheetUrl') || '').toString().trim();
+  const editingId = (fd.get('editingId') || '').toString();
+  if (!name) { state.clientFormError = 'יש להזין שם לקוח'; render(); return; }
+  const sheetId = extractSheetId(sheetUrl);
+  if (editingId) {
+    const c = state.clients.find(x => x.id === editingId);
+    if (c) { c.name = name; c.sheetUrl = sheetUrl; c.sheetId = sheetId; }
+  } else {
+    state.clients.push({ id: uid(), name, sheetUrl, sheetId, sheetTab: 'Sheet1' });
+  }
+  persistClients();
+  state.clientEditingId = null; state.clientFormName = ''; state.clientFormUrl = ''; state.clientFormError = '';
+  if (!state.activeClientId) state.activeClientId = state.clients[0]?.id || '';
+  render();
+}
+function onEditClient(id) {
+  const c = state.clients.find(x => x.id === id);
+  if (!c) return;
+  state.clientEditingId = id; state.clientFormName = c.name; state.clientFormUrl = c.sheetUrl || ''; state.clientFormError = '';
+  render();
+}
+function onDeleteClient(id) {
+  const c = state.clients.find(x => x.id === id);
+  if (!c) return;
+  if (!confirm(`למחוק את הלקוח "${c.name}"? הרשומות שלו יימחקו מהאפליקציה (לא מ-Google Sheets).`)) return;
+  state.clients = state.clients.filter(x => x.id !== id);
+  localStorage.removeItem('collection_items_' + id);
+  localStorage.removeItem('collection_lastsync_' + id);
+  persistClients();
+  if (state.activeClientId === id) state.activeClientId = state.clients[0]?.id || '';
+  render();
+}
+
+/* =========================== Sync action ============================ */
+async function doSync() {
+  const client = activeClient();
+  if (!client || !client.sheetId) { state.syncMsg = 'ללקוח זה אין קישור ל-Google Sheet'; render(); return; }
+  if (!GOOGLE_CLIENT_ID) { state.showGoogleSetup = true; render(); return; }
+  state.syncing = true; state.syncMsg = 'מסנכרן...'; render();
+  try {
+    const r = await syncClient(client);
+    state.syncMsg = `סונכרן ✓ (${r.pulled} חדשים מהטבלה, ${r.pushedNew} נשלחו לטבלה, ${r.updated + r.pushedUpdates} עודכנו)`;
+  } catch (e) {
+    state.syncMsg = 'שגיאת סנכרון: ' + e.message;
+  } finally {
+    state.syncing = false; render();
+    setTimeout(() => { state.syncMsg = ''; render(); }, 6000);
+  }
+}
+
+/* =========================== Init ============================ */
+window.addEventListener('load', () => {
+  initGoogleAuth();
+  render();
+  // auto-sync every 60s
+  setInterval(() => {
+    const c = activeClient();
+    if (c && c.sheetId && isGoogleAuthorized() && !state.syncing) doSync();
+  }, 60000);
+});
+</script>
+</body>
+</html>
