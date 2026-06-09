@@ -18,6 +18,8 @@ button:disabled{opacity:.5;cursor:default}
 button.danger{border-color:#e3a3a3;color:#b3261e}
 button.danger:hover{background:#fbe9e9}
 button.connected{border-color:#67c587;color:#1a7f3c}
+button.primary{background:#2563eb;color:#fff;border-color:#2563eb}
+button.primary:hover{background:#1d4ed8}
 input,textarea,select{font-family:inherit;font-size:14px;padding:7px 10px;border:1px solid #cfd3da;border-radius:6px;background:#fff;color:inherit}
 a{color:#2563eb}
 .app{max-width:1300px;margin:0 auto;padding:16px 20px 60px}
@@ -27,16 +29,18 @@ a{color:#2563eb}
 .client-select{min-width:160px}
 .sync-msg{background:#eef4ff;border:1px solid #c8dbff;border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:14px}
 .empty-state{text-align:center;background:#fff;border-radius:12px;padding:50px 20px;border:1px dashed #cfd3da}
+/* reminders bar */
 .reminders-bar{margin-bottom:14px}
 .reminders-toggle{background:#fff7e6;border-color:#f0c779;width:100%;text-align:right;font-weight:600}
 .reminders-list{list-style:none;margin:6px 0 0;padding:0;background:#fff;border:1px solid #eadfca;border-radius:8px;overflow:hidden}
-.reminders-list li{display:flex;gap:14px;padding:8px 14px;border-bottom:1px solid #f1ede3;cursor:pointer;font-size:14px}
+.reminders-list li{display:flex;gap:14px;padding:8px 14px;border-bottom:1px solid #f1ede3;cursor:pointer;font-size:14px;align-items:center}
 .reminders-list li:hover{background:#fffaf0}
 .reminders-list li:last-child{border-bottom:none}
 .rem-date{color:#b3261e;font-weight:600;min-width:90px}
 .rem-client{font-weight:600;min-width:110px}
 .rem-name{color:#555}
 .rem-task{color:#888;flex:1}
+/* table */
 .items-table-wrap{background:#fff;border-radius:12px;padding:16px;border:1px solid #e3e5ea}
 .table-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .table-toolbar h2{margin:0;font-size:18px;flex:1}
@@ -55,7 +59,10 @@ td input{width:120px}
 .btn-link{display:inline-flex;align-items:center;justify-content:center;border:1px solid #cfd3da;border-radius:8px;padding:6px 9px;text-decoration:none;background:#fff}
 .btn-link.wa:hover{background:#e7f9ee;border-color:#67c587}
 .btn-link.mail:hover{background:#eef4ff;border-color:#93b8ff}
+.btn-bell{background:none;border:1px solid #cfd3da;border-radius:8px;padding:5px 8px;font-size:15px;line-height:1}
+.btn-bell.has-reminder{border-color:#f0c779;background:#fffbf0}
 .empty{color:#888}
+/* modals */
 .modal-backdrop{position:fixed;inset:0;background:rgba(20,20,30,.4);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
 .modal{background:#fff;border-radius:14px;padding:22px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto}
 .modal h2{margin-top:0}
@@ -77,25 +84,43 @@ td input{width:120px}
 .instructions code{background:#f1f1f5;padding:1px 6px;border-radius:4px}
 .qr-box{text-align:center;margin:10px 0}
 .share-link{direction:ltr;text-align:left;word-break:break-all;background:#f6f7fb;border-radius:6px;padding:8px;font-size:12.5px}
-/* ---- Reminder popup ---- */
-.rp-backdrop{position:fixed;inset:0;background:rgba(20,20,30,.45);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:60px 16px 16px}
-.rp-box{background:#fff;border-radius:16px;padding:22px;max-width:520px;width:100%;box-shadow:0 8px 36px rgba(0,0,0,.2);max-height:80vh;overflow-y:auto;animation:rp-in .25s ease}
-@keyframes rp-in{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:none}}
+/* notification bar */
+.notif-bar{background:#fffbf0;border:1px solid #f0c779;border-radius:8px;padding:8px 14px;font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.notif-bar button{padding:5px 11px;font-size:13px}
+/* reminder popup (overdue items) */
+.rp-backdrop{position:fixed;inset:0;background:rgba(20,20,30,.5);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding:60px 16px 16px}
+.rp-box{background:#fff;border-radius:16px;padding:22px;max-width:540px;width:100%;box-shadow:0 8px 36px rgba(0,0,0,.22);max-height:82vh;overflow-y:auto;animation:rp-in .22s ease}
+@keyframes rp-in{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}
 .rp-box h2{margin:0 0 4px;font-size:19px;color:#b3261e}
 .rp-box .rp-sub{font-size:13px;color:#777;margin:0 0 14px}
 .rp-list{list-style:none;padding:0;margin:0 0 14px}
 .rp-list li{padding:10px 0;border-bottom:1px solid #f0ece3;display:flex;flex-direction:column;gap:5px}
 .rp-list li:last-child{border-bottom:none}
 .rp-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.rp-date{font-size:12px;color:#b3261e;font-weight:700;background:#fbe9e9;border-radius:999px;padding:2px 8px}
-.rp-client-tag{font-size:12px;background:#eef0f5;border-radius:999px;padding:2px 8px;color:#555}
+.rp-date-tag{font-size:12px;color:#b3261e;font-weight:700;background:#fbe9e9;border-radius:999px;padding:2px 9px}
+.rp-client-tag{font-size:12px;background:#eef0f5;border-radius:999px;padding:2px 9px;color:#555}
 .rp-name{font-weight:600;font-size:14px}
 .rp-task{font-size:13px;color:#666}
-.rp-actions{display:flex;gap:6px;margin-top:4px}
+.rp-actions{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
 .rp-footer{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;border-top:1px solid #eee;padding-top:14px;margin-top:4px}
-/* ---- Notification bar ---- */
-.notif-bar{background:#fffbf0;border:1px solid #f0c779;border-radius:8px;padding:8px 14px;font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.notif-bar button{padding:5px 11px;font-size:13px}
+/* timed reminder dialog */
+.tr-modal{max-width:400px}
+.tr-form{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+.tr-form label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:#555}
+.tr-existing{background:#fffbf0;border:1px solid #f0c779;border-radius:8px;padding:10px 14px;font-size:13px;margin-top:8px}
+.tr-existing ul{margin:6px 0 0;padding-inline-start:18px}
+/* timed reminder fire popup */
+.trp-backdrop{position:fixed;inset:0;z-index:300;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px 16px;pointer-events:none}
+.trp-box{background:#fff;border-radius:16px;padding:18px 22px;max-width:420px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.28);animation:rp-in .2s ease;pointer-events:all;border-top:4px solid #f0c779}
+.trp-box h3{margin:0 0 6px;font-size:17px;color:#92400e}
+.trp-box .trp-name{font-weight:600;font-size:15px}
+.trp-box .trp-info{font-size:13px;color:#666;margin:4px 0 10px}
+.trp-actions{display:flex;gap:8px;flex-wrap:wrap}
+/* all data screen */
+.all-data-screen{background:#fff;border-radius:12px;padding:16px;border:1px solid #e3e5ea}
+.all-data-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.all-data-toolbar h2{margin:0;font-size:18px;flex:1}
+.client-col{font-size:12px;background:#eef0f5;border-radius:999px;padding:2px 8px;display:inline-block;color:#555}
 </style>
 </head>
 <body>
@@ -104,22 +129,21 @@ td input{width:120px}
 <script>
 'use strict';
 
-/* =========================== Constants & template ============================ */
-// IMPORTANT: replace with your own Google OAuth Client ID (see "חיבור ל-Google" instructions in app)
+/* =========================== Constants ============================ */
 const GOOGLE_CLIENT_ID = localStorage.getItem('collection_google_client_id') || '';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
 
 const COLUMNS = [
-  { key: 'task', header: 'משימה' },
-  { key: 'follow_up_date', header: 'תאריך מעקב', type: 'date' },
-  { key: 'customer_name', header: 'שם לקוח' },
-  { key: 'customer_phone', header: 'נייד לקוח', dir: 'ltr' },
-  { key: 'customer_email', header: 'כתובת מייל', dir: 'ltr' },
-  { key: 'debt_amount', header: 'סכום החוב' },
-  { key: 'invoice_number', header: "מס' חשבונית" },
-  { key: 'balance_due', header: 'יתרה לתשלום' },
-  { key: 'payment_method', header: 'אמצעי תשלום' },
-  { key: 'notes', header: 'הערות' },
+  { key: 'task',            header: 'משימה' },
+  { key: 'follow_up_date',  header: 'תאריך מעקב', type: 'date' },
+  { key: 'customer_name',   header: 'שם לקוח' },
+  { key: 'customer_phone',  header: 'נייד לקוח', dir: 'ltr' },
+  { key: 'customer_email',  header: 'כתובת מייל', dir: 'ltr' },
+  { key: 'debt_amount',     header: 'סכום החוב' },
+  { key: 'invoice_number',  header: "מס' חשבונית" },
+  { key: 'balance_due',     header: 'יתרה לתשלום' },
+  { key: 'payment_method',  header: 'אמצעי תשלום' },
+  { key: 'notes',           header: 'הערות' },
 ];
 
 /* =========================== Storage helpers ============================ */
@@ -127,17 +151,24 @@ const LS = {
   get(key, fallback) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; } },
   set(key, value) { localStorage.setItem(key, JSON.stringify(value)); },
 };
-
-function getClients() { return LS.get('collection_clients', []); }
-function setClients(list) { LS.set('collection_clients', list); }
-function getItems(clientId) { return LS.get('collection_items_' + clientId, []); }
+function getClients()           { return LS.get('collection_clients', []); }
+function setClients(list)       { LS.set('collection_clients', list); }
+function getItems(clientId)     { return LS.get('collection_items_' + clientId, []); }
 function setItems(clientId, items) { LS.set('collection_items_' + clientId, items); }
-function getLastSync(clientId) { return localStorage.getItem('collection_lastsync_' + clientId) || null; }
-function setLastSync(clientId) { localStorage.setItem('collection_lastsync_' + clientId, new Date().toISOString()); }
+function getLastSync(clientId)  { return localStorage.getItem('collection_lastsync_' + clientId) || null; }
+function setLastSync(clientId)  { localStorage.setItem('collection_lastsync_' + clientId, new Date().toISOString()); }
 
-function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
-function nowIso() { return new Date().toISOString(); }
+/* timed reminders storage */
+function getTimedReminders()    { return LS.get('collection_timed_reminders', []); }
+function setTimedReminders(arr) { LS.set('collection_timed_reminders', arr); }
+
+function uid()      { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function nowIso()   { return new Date().toISOString(); }
 function todayStr() { return new Date().toISOString().slice(0, 10); }
+function nowLocalDatetime() {
+  const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+}
 
 function extractSheetId(input) {
   if (!input) return null;
@@ -147,22 +178,19 @@ function extractSheetId(input) {
   return null;
 }
 
-/* =========================== Google auth (browser OAuth) ============================ */
+/* =========================== Google auth ============================ */
 let gTokenClient = null;
 let gAccessToken = sessionStorage.getItem('collection_g_token') || null;
-let gTokenExpiry = Number(sessionStorage.getItem('collection_g_token_exp') || 0);
+let gTokenExpiry  = Number(sessionStorage.getItem('collection_g_token_exp') || 0);
 
-function isGoogleAuthorized() {
-  return !!gAccessToken && Date.now() < gTokenExpiry;
-}
+function isGoogleAuthorized() { return !!gAccessToken && Date.now() < gTokenExpiry; }
 
 function initGoogleAuth() {
   if (!window.google || !GOOGLE_CLIENT_ID) return;
   gTokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: GOOGLE_CLIENT_ID,
-    scope: SHEETS_SCOPE,
+    client_id: GOOGLE_CLIENT_ID, scope: SHEETS_SCOPE,
     callback: (resp) => {
-      if (resp && resp.access_token) {
+      if (resp?.access_token) {
         gAccessToken = resp.access_token;
         gTokenExpiry = Date.now() + (Number(resp.expires_in || 3500) * 1000);
         sessionStorage.setItem('collection_g_token', gAccessToken);
@@ -172,22 +200,20 @@ function initGoogleAuth() {
     },
   });
 }
-
 function connectGoogle() {
-  if (!GOOGLE_CLIENT_ID) { alert('יש להגדיר תחילה Client ID של Google (לחצי על "חיבור ל-Google")'); return; }
+  if (!GOOGLE_CLIENT_ID) { alert('יש להגדיר תחילה Client ID של Google'); return; }
   if (!gTokenClient) initGoogleAuth();
   if (gTokenClient) gTokenClient.requestAccessToken({ prompt: isGoogleAuthorized() ? '' : 'consent' });
 }
-
 async function ensureGoogleToken() {
   if (isGoogleAuthorized()) return true;
   return new Promise((resolve) => {
     if (!gTokenClient) initGoogleAuth();
     if (!gTokenClient) return resolve(false);
-    const original = gTokenClient.callback;
+    const orig = gTokenClient.callback;
     gTokenClient.callback = (resp) => {
-      gTokenClient.callback = original;
-      if (resp && resp.access_token) {
+      gTokenClient.callback = orig;
+      if (resp?.access_token) {
         gAccessToken = resp.access_token;
         gTokenExpiry = Date.now() + (Number(resp.expires_in || 3500) * 1000);
         sessionStorage.setItem('collection_g_token', gAccessToken);
@@ -200,45 +226,37 @@ async function ensureGoogleToken() {
 }
 
 /* =========================== Sheets API ============================ */
-async function sheetsGet(spreadsheetId, range) {
-  const ok = await ensureGoogleToken();
-  if (!ok) throw new Error('לא מחוברת לחשבון Google');
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${gAccessToken}` } });
+async function sheetsGet(id, range) {
+  const ok = await ensureGoogleToken(); if (!ok) throw new Error('לא מחוברת לחשבון Google');
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(range)}`, { headers: { Authorization: `Bearer ${gAccessToken}` } });
   if (!res.ok) throw new Error('שגיאה בקריאת הטבלה (' + res.status + ')');
   return res.json();
 }
-async function sheetsUpdate(spreadsheetId, range, values) {
-  const ok = await ensureGoogleToken();
-  if (!ok) throw new Error('לא מחוברת לחשבון Google');
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?valueInputOption=RAW`;
-  const res = await fetch(url, { method: 'PUT', headers: { Authorization: `Bearer ${gAccessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ values }) });
+async function sheetsUpdate(id, range, values) {
+  const ok = await ensureGoogleToken(); if (!ok) throw new Error('לא מחוברת לחשבון Google');
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(range)}?valueInputOption=RAW`, { method: 'PUT', headers: { Authorization: `Bearer ${gAccessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ values }) });
   if (!res.ok) throw new Error('שגיאה בעדכון הטבלה (' + res.status + ')');
   return res.json();
 }
-async function sheetsBatchUpdate(spreadsheetId, data) {
-  const ok = await ensureGoogleToken();
-  if (!ok) throw new Error('לא מחוברת לחשבון Google');
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchUpdate`;
-  const res = await fetch(url, { method: 'POST', headers: { Authorization: `Bearer ${gAccessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ valueInputOption: 'RAW', data }) });
+async function sheetsBatchUpdate(id, data) {
+  const ok = await ensureGoogleToken(); if (!ok) throw new Error('לא מחוברת לחשבון Google');
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values:batchUpdate`, { method: 'POST', headers: { Authorization: `Bearer ${gAccessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ valueInputOption: 'RAW', data }) });
   if (!res.ok) throw new Error('שגיאה בעדכון הטבלה (' + res.status + ')');
   return res.json();
 }
-async function sheetsAppend(spreadsheetId, range, values) {
-  const ok = await ensureGoogleToken();
-  if (!ok) throw new Error('לא מחוברת לחשבון Google');
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`;
-  const res = await fetch(url, { method: 'POST', headers: { Authorization: `Bearer ${gAccessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ values }) });
+async function sheetsAppend(id, range, values) {
+  const ok = await ensureGoogleToken(); if (!ok) throw new Error('לא מחוברת לחשבון Google');
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, { method: 'POST', headers: { Authorization: `Bearer ${gAccessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ values }) });
   if (!res.ok) throw new Error('שגיאה בהוספת שורה לטבלה (' + res.status + ')');
   return res.json();
 }
 
 const RANGE_FOR = (tab) => `${tab || 'Sheet1'}!A1:J`;
-function rowToItem(row) { const o = {}; COLUMNS.forEach((c, i) => o[c.key] = row[i] ?? ''); return o; }
+function rowToItem(row) { const o = {}; COLUMNS.forEach((c,i) => o[c.key] = row[i] ?? ''); return o; }
 function itemToRow(item) { return COLUMNS.map((c) => item[c.key] ?? ''); }
 function rowsEqual(a, b) { return COLUMNS.every((c) => (a[c.key] ?? '') === (b[c.key] ?? '')); }
 
-/* =========================== Sync logic (bidirectional) ============================ */
+/* =========================== Sync ============================ */
 async function syncClient(client) {
   if (!client.sheetId) throw new Error('ללקוח אין קישור ל-Google Sheet');
   const tab = client.sheetTab || 'Sheet1';
@@ -246,14 +264,11 @@ async function syncClient(client) {
   const res = await sheetsGet(client.sheetId, range);
   const values = res.values || [];
   const dataRows = values.slice(1);
-
   let local = getItems(client.id);
   const bySheetRow = new Map(local.filter(i => i.sheetRow != null).map(i => [i.sheetRow, i]));
   const lastSync = getLastSync(client.id);
-
   let pulled = 0, updated = 0;
   const seen = new Set();
-
   for (let i = 0; i < dataRows.length; i++) {
     const sheetRow = i + 2;
     const row = dataRows[i];
@@ -261,62 +276,43 @@ async function syncClient(client) {
     seen.add(sheetRow);
     const sheetItem = rowToItem(row);
     const loc = bySheetRow.get(sheetRow);
-    if (!loc) {
-      local.push({ id: uid(), sheetRow, updatedAt: nowIso(), ...sheetItem });
-      pulled++;
-    } else if (!rowsEqual(loc, sheetItem)) {
+    if (!loc) { local.push({ id: uid(), sheetRow, updatedAt: nowIso(), ...sheetItem }); pulled++; }
+    else if (!rowsEqual(loc, sheetItem)) {
       const localChanged = !lastSync || (loc.updatedAt && loc.updatedAt > lastSync);
-      if (!localChanged) {
-        Object.assign(loc, sheetItem);
-        loc.updatedAt = nowIso();
-        updated++;
-      }
-      // else: local wins, will be pushed below
+      if (!localChanged) { Object.assign(loc, sheetItem); loc.updatedAt = nowIso(); updated++; }
     }
   }
-
-  // Push local-only (new) items
   const toAppend = local.filter(it => it.sheetRow == null);
   if (toAppend.length) {
-    const startRow = values.length + 1;
     await sheetsAppend(client.sheetId, range, toAppend.map(itemToRow));
-    toAppend.forEach((it, idx) => { it.sheetRow = startRow + idx; });
+    toAppend.forEach((it, idx) => { it.sheetRow = values.length + 1 + idx; });
   }
-
-  // Push local-changed-since-sync items that differ from sheet
   const toUpdate = local.filter(it => {
     if (it.sheetRow == null || toAppend.includes(it)) return false;
-    const idx = it.sheetRow - 2;
-    const sheetRow = dataRows[idx];
     const localChanged = !lastSync || (it.updatedAt && it.updatedAt > lastSync);
-    if (!sheetRow) return localChanged;
-    return localChanged && !rowsEqual(it, rowToItem(sheetRow));
+    if (!localChanged) return false;
+    const sheetRow = dataRows[it.sheetRow - 2];
+    return !sheetRow || !rowsEqual(it, rowToItem(sheetRow));
   });
-  if (toUpdate.length) {
-    await sheetsBatchUpdate(client.sheetId, toUpdate.map(it => ({ range: `${tab}!A${it.sheetRow}:J${it.sheetRow}`, values: [itemToRow(it)] })));
-  }
-
+  if (toUpdate.length) await sheetsBatchUpdate(client.sheetId, toUpdate.map(it => ({ range: `${tab}!A${it.sheetRow}:J${it.sheetRow}`, values: [itemToRow(it)] })));
   setItems(client.id, local);
   setLastSync(client.id);
   return { pulled, updated, pushedNew: toAppend.length, pushedUpdates: toUpdate.length };
 }
-
 async function pushSingleItem(client, item) {
   if (!client.sheetId || !isGoogleAuthorized()) return;
   const tab = client.sheetTab || 'Sheet1';
   try {
-    if (item.sheetRow) {
-      await sheetsUpdate(client.sheetId, `${tab}!A${item.sheetRow}:J${item.sheetRow}`, [itemToRow(item)]);
-    } else {
+    if (item.sheetRow) await sheetsUpdate(client.sheetId, `${tab}!A${item.sheetRow}:J${item.sheetRow}`, [itemToRow(item)]);
+    else {
       const res = await sheetsGet(client.sheetId, RANGE_FOR(tab));
-      const startRow = (res.values || []).length + 1;
       await sheetsAppend(client.sheetId, RANGE_FOR(tab), [itemToRow(item)]);
-      item.sheetRow = startRow;
+      item.sheetRow = (res.values || []).length + 1;
     }
-  } catch (e) { /* best-effort; will be retried on next full sync */ }
+  } catch(e) { /* best-effort */ }
 }
 
-/* =========================== Message helpers (WhatsApp / Email) ============================ */
+/* =========================== Message helpers ============================ */
 function buildMessage(item) {
   const name = item.customer_name || 'לקוח/ה יקר/ה';
   const amount = item.balance_due || item.debt_amount;
@@ -346,38 +342,87 @@ function buildMailtoLink(item) {
 function isOverdue(d) { return !!d && d <= todayStr(); }
 function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-/* =========================== Notification helpers ============================ */
+/* =========================== Browser Notifications ============================ */
 function notifPermission() { return typeof Notification !== 'undefined' ? Notification.permission : 'denied'; }
 function canNotif() { return notifPermission() === 'granted'; }
-async function requestNotif() {
-  if (typeof Notification === 'undefined') return false;
-  const p = await Notification.requestPermission();
-  render();
-  return p === 'granted';
-}
-const _notifiedToday = new Set();
-function sendBrowserNotif(title, body) {
+async function requestNotif() { if (typeof Notification === 'undefined') return false; const p = await Notification.requestPermission(); render(); return p === 'granted'; }
+function sendBrowserNotif(title, body, tag) {
   if (!canNotif()) return;
-  try { new Notification(title, { body, icon: 'icon.png' }); } catch(e) {}
+  try { new Notification(title, { body, icon: 'icon.png', tag }); } catch(e) {}
 }
-function fireReminderNotifs(reminders) {
+
+/* =========================== Overdue reminders ============================ */
+function getAllReminders() {
+  const today = todayStr();
+  const out = [];
+  state.clients.forEach(c => {
+    getItems(c.id).forEach(it => {
+      if (it.follow_up_date && it.follow_up_date <= today)
+        out.push({ ...it, client_id: c.id, client_name: c.name });
+    });
+  });
+  out.sort((a, b) => (a.follow_up_date || '').localeCompare(b.follow_up_date || ''));
+  return out;
+}
+const _firedOverdue = new Set();
+function fireOverdueNotifs(reminders) {
   const today = todayStr();
   reminders.forEach(r => {
     const key = r.id + '_' + today;
-    if (!_notifiedToday.has(key)) {
-      _notifiedToday.add(key);
-      const name = r.customer_name || 'לקוח';
-      const task = r.task || '';
-      sendBrowserNotif(`🔔 תזכורת גבייה – ${name}`, `${task}${r.balance_due ? ' | יתרה: ₪' + r.balance_due : ''}`);
+    if (!_firedOverdue.has(key)) {
+      _firedOverdue.add(key);
+      sendBrowserNotif(`🔔 תזכורת גבייה – ${r.customer_name || 'לקוח'}`, `${r.task || ''}${r.balance_due ? ' | יתרה: ₪' + r.balance_due : ''}`, key);
     }
   });
 }
-
 function getReminderSnooze() { return Number(localStorage.getItem('collection_reminder_snooze') || 0); }
 function setReminderSnooze(ms) { localStorage.setItem('collection_reminder_snooze', String(ms)); }
 function isReminderSnoozed() { return Date.now() < getReminderSnooze(); }
 function getDismissedDate() { return localStorage.getItem('collection_reminder_dismissed') || ''; }
 function setDismissedDate() { localStorage.setItem('collection_reminder_dismissed', todayStr()); }
+
+/* =========================== Timed reminders ============================ */
+const _firedTimed = new Set();
+
+function checkTimedReminders() {
+  const now = Date.now();
+  let changed = false;
+  const list = getTimedReminders();
+  list.forEach(tr => {
+    if (tr.fired) return;
+    if (new Date(tr.datetime).getTime() <= now) {
+      tr.fired = true; changed = true;
+      if (!_firedTimed.has(tr.id)) {
+        _firedTimed.add(tr.id);
+        sendBrowserNotif(`⏰ תזכורת: ${tr.customerName || 'לקוח'}`, tr.task || 'תזכורת גבייה', tr.id);
+        state.firingTimedReminder = tr;
+        render();
+      }
+    }
+  });
+  if (changed) setTimedReminders(list);
+}
+
+function addTimedReminder(itemId, clientId, datetime, item) {
+  const list = getTimedReminders();
+  list.push({
+    id: uid(), itemId, clientId, datetime,
+    customerName: item.customer_name || '',
+    task: item.task || '',
+    balance_due: item.balance_due || '',
+    customer_phone: item.customer_phone || '',
+    customer_email: item.customer_email || '',
+    invoice_number: item.invoice_number || '',
+    fired: false,
+  });
+  setTimedReminders(list);
+}
+function deleteTimedReminder(reminderId) {
+  setTimedReminders(getTimedReminders().filter(r => r.id !== reminderId));
+}
+function getTimedRemindersForItem(itemId) {
+  return getTimedReminders().filter(r => r.itemId === itemId && !r.fired);
+}
 
 /* =========================== App State ============================ */
 const state = {
@@ -388,31 +433,28 @@ const state = {
   showAddForm: false,
   editingId: null,
   search: '',
+  allDataSearch: '',
   remindersOpen: false,
   syncing: false,
   syncMsg: '',
-  showReminderPopup: false,
+  showReminderPopup: false,    // overdue reminder popup
+  showAllData: false,          // all data screen
+  timedReminderItemId: null,   // which item has the timed reminder dialog open
+  timedReminderClientId: null,
+  firingTimedReminder: null,   // currently firing timed reminder
+  clientEditingId: null, clientFormName: '', clientFormUrl: '', clientFormError: '',
+  showShare: false,
 };
-if (!state.activeClientId || !state.clients.some(c => c.id === state.activeClientId)) {
+if (!state.activeClientId || !state.clients.some(c => c.id === state.activeClientId))
   state.activeClientId = state.clients[0]?.id || '';
-}
 
 function activeClient() { return state.clients.find(c => c.id === state.activeClientId) || null; }
-
 function persistClients() { setClients(state.clients); }
-function setActiveClient(id) { state.activeClientId = id; localStorage.setItem('collection_active_client', id); state.showAddForm = false; state.editingId = null; render(); }
-
-/* =========================== Reminders ============================ */
-function getAllReminders() {
-  const today = todayStr();
-  const out = [];
-  state.clients.forEach(c => {
-    getItems(c.id).forEach(it => {
-      if (it.follow_up_date && it.follow_up_date <= today) out.push({ ...it, client_id: c.id, client_name: c.name });
-    });
-  });
-  out.sort((a, b) => (a.follow_up_date || '').localeCompare(b.follow_up_date || ''));
-  return out;
+function setActiveClient(id) {
+  state.activeClientId = id;
+  localStorage.setItem('collection_active_client', id);
+  state.showAddForm = false; state.editingId = null; state.showAllData = false;
+  render();
 }
 
 /* =========================== Rendering ============================ */
@@ -427,14 +469,17 @@ function render() {
       <header class="topbar">
         <h1>📋 ניהול גבייה</h1>
         <div class="topbar-controls">
-          <select id="clientSelect" class="client-select">
-            ${state.clients.length === 0 ? '<option value="">אין לקוחות עדיין</option>' : ''}
-            ${state.clients.map(c => `<option value="${c.id}" ${c.id === state.activeClientId ? 'selected' : ''}>${escapeHtml(c.name)}</option>`).join('')}
-          </select>
+          ${!state.showAllData ? `
+            <select id="clientSelect" class="client-select">
+              ${state.clients.length === 0 ? '<option value="">אין לקוחות עדיין</option>' : ''}
+              ${state.clients.map(c => `<option value="${c.id}" ${c.id === state.activeClientId ? 'selected' : ''}>${escapeHtml(c.name)}</option>`).join('')}
+            </select>` : ''}
+          <button id="btnAllData" class="${state.showAllData ? 'primary' : ''}">📊 כל הנתונים</button>
           <button id="btnClients">⚙️ ניהול לקוחות</button>
-          <button id="btnGoogle" class="${isGoogleAuthorized() ? 'connected' : ''}">${isGoogleAuthorized() ? '🟢 מחובר ל-Google' : '🔌 חיבור ל-Google Sheets'}</button>
-          ${ac && ac.sheetId ? `<button id="btnSync" ${state.syncing ? 'disabled' : ''}>${state.syncing ? 'מסנכרן…' : '🔄 סנכרן עכשיו'}</button>` : ''}
-          <button id="btnShare">🔗 שיתוף הקישור</button>
+          <button id="btnGoogle" class="${isGoogleAuthorized() ? 'connected' : ''}">${isGoogleAuthorized() ? '🟢 מחובר' : '🔌 חיבור Google'}</button>
+          ${!state.showAllData && ac?.sheetId ? `<button id="btnSync" ${state.syncing ? 'disabled' : ''}>${state.syncing ? 'מסנכרן…' : '🔄 סנכרן'}</button>` : ''}
+          ${reminders.length ? `<button id="btnShowReminders" title="תזכורות ממתינות" style="background:#fff7e6;border-color:#f0c779;font-size:16px">🔔 ${reminders.length}</button>` : ''}
+          <button id="btnShare">🔗 שיתוף</button>
         </div>
       </header>
 
@@ -444,10 +489,10 @@ function render() {
         <div class="notif-bar">
           🔔 <span>הפעילי התראות דפדפן כדי לקבל תזכורות גם כשהאפליקציה סגורה</span>
           <button id="btnEnableNotif">הפעלת התראות</button>
-          <button id="btnDismissNotifBar" style="background:none;border:none;color:#aaa;padding:2px 6px;font-size:16px">✖</button>
+          <button id="btnDismissNotifBar" style="background:none;border:none;color:#aaa;padding:2px 6px;font-size:16px;cursor:pointer">✖</button>
         </div>` : ''}
 
-      ${reminders.length ? `
+      ${reminders.length && !state.showAllData ? `
         <div class="reminders-bar">
           <button class="reminders-toggle" id="remindersToggle">🔔 ${reminders.length} תזכורות לטיפול היום או באיחור ${state.remindersOpen ? '▲' : '▼'}</button>
           ${state.remindersOpen ? `
@@ -463,27 +508,77 @@ function render() {
         </div>` : ''}
 
       <main>
-        ${!ac ? `
-          <div class="empty-state">
-            <p>עדיין אין לקוחות. לחצי על "ניהול לקוחות" כדי להוסיף לקוח חדש (אפשר לקשר אותו לקובץ Google Sheets).</p>
-            <button id="btnAddClientEmpty">➕ הוספת לקוח</button>
-          </div>` : renderItemsTable(ac)}
+        ${state.showAllData ? renderAllData() :
+          !ac ? `
+            <div class="empty-state">
+              <p>עדיין אין לקוחות. לחצי על "ניהול לקוחות" כדי להוסיף לקוח חדש.</p>
+              <button id="btnAddClientEmpty">➕ הוספת לקוח</button>
+            </div>` : renderItemsTable(ac)}
       </main>
     </div>
-    ${state.showClientManager ? renderClientManager() : ''}
-    ${state.showGoogleSetup ? renderGoogleSetup() : ''}
-    ${state.showShare ? renderShare() : ''}
-    ${state.showReminderPopup && reminders.length ? renderReminderPopup(reminders) : ''}
+    ${state.showClientManager    ? renderClientManager()    : ''}
+    ${state.showGoogleSetup      ? renderGoogleSetup()      : ''}
+    ${state.showShare            ? renderShare()            : ''}
+    ${state.showReminderPopup && reminders.length ? renderOverduePopup(reminders) : ''}
+    ${state.timedReminderItemId  ? renderTimedReminderDialog() : ''}
+    ${state.firingTimedReminder  ? renderTimedFirePopup(state.firingTimedReminder) : ''}
   `;
-
   bindEvents();
 }
 
+/* ---- All data screen ---- */
+function renderAllData() {
+  const search = state.allDataSearch.trim().toLowerCase();
+  const today = todayStr();
+  const allItems = [];
+  state.clients.forEach(c => {
+    getItems(c.id).forEach(it => allItems.push({ ...it, _clientName: c.name, _clientId: c.id }));
+  });
+  const filtered = !search ? allItems : allItems.filter(it =>
+    [it.customer_name, it.task, it.invoice_number, it.notes, it._clientName].some(v => (v||'').toLowerCase().includes(search))
+  );
+  filtered.sort((a,b) => (a.follow_up_date||'').localeCompare(b.follow_up_date||''));
+  return `
+    <div class="all-data-screen">
+      <div class="all-data-toolbar">
+        <h2>📊 כל נתוני הגבייה (${filtered.length} רשומות)</h2>
+        <input class="search" id="allDataSearch" placeholder="🔎 חיפוש…" value="${escapeHtml(state.allDataSearch)}" />
+        <button id="btnCloseAllData">← חזרה ללקוח</button>
+      </div>
+      ${filtered.length === 0 ? '<p class="empty">אין רשומות.</p>' : `
+        <div class="table-scroll">
+          <table>
+            <thead><tr>
+              <th>לקוח</th>
+              ${COLUMNS.map(f => `<th>${f.header}</th>`).join('')}
+              <th>פעולות</th>
+            </tr></thead>
+            <tbody>
+              ${filtered.map(item => {
+                const overdue = isOverdue(item.follow_up_date);
+                return `<tr class="${overdue ? 'overdue' : ''}" data-id="${item.id}">
+                  <td><span class="client-col">${escapeHtml(item._clientName)}</span></td>
+                  ${COLUMNS.map(f => `<td dir="${f.dir||'auto'}">${escapeHtml(item[f.key]||'')}</td>`).join('')}
+                  <td class="actions-cell">
+                    <a class="btn-link wa" href="${buildWhatsAppLink(item)}" target="_blank" rel="noreferrer" title="וואטסאפ">💬</a>
+                    <a class="btn-link mail" href="${buildMailtoLink(item)}" title="מייל">✉️</a>
+                  </td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>`}
+    </div>`;
+}
+
+/* ---- Items table (single client) ---- */
 function renderItemsTable(client) {
   const items = getItems(client.id);
   const search = state.search.trim().toLowerCase();
-  const filtered = !search ? items : items.filter(it => [it.customer_name, it.task, it.invoice_number, it.notes].some(v => (v || '').toLowerCase().includes(search)));
-
+  const filtered = !search ? items : items.filter(it =>
+    [it.customer_name, it.task, it.invoice_number, it.notes].some(v => (v||'').toLowerCase().includes(search))
+  );
+  const timedReminders = getTimedReminders();
   return `
     <div class="items-table-wrap">
       <div class="table-toolbar">
@@ -491,52 +586,46 @@ function renderItemsTable(client) {
         <input class="search" id="searchInput" placeholder="🔎 חיפוש לפי שם, משימה, מס' חשבונית…" value="${escapeHtml(state.search)}" />
         <button id="btnToggleAdd">${state.showAddForm ? 'ביטול' : '➕ הוספת גבייה חדשה'}</button>
       </div>
-
       ${state.showAddForm ? `
         <form class="add-form" id="addForm">
-          ${COLUMNS.map(f => `
-            <label>${f.header}
-              <input name="${f.key}" type="${f.type || 'text'}" dir="${f.dir || 'auto'}" />
-            </label>`).join('')}
+          ${COLUMNS.map(f => `<label>${f.header}<input name="${f.key}" type="${f.type||'text'}" dir="${f.dir||'auto'}" /></label>`).join('')}
           <div class="form-actions"><button type="submit">💾 שמירה</button></div>
         </form>` : ''}
-
-      ${filtered.length === 0 ? `<p class="empty">אין רשומות עדיין. אפשר להוסיף גבייה חדשה, או לסנכרן מ-Google Sheets.</p>` : `
+      ${filtered.length === 0 ? `<p class="empty">אין רשומות עדיין.</p>` : `
         <div class="table-scroll">
           <table>
             <thead><tr>${COLUMNS.map(f => `<th>${f.header}</th>`).join('')}<th>פעולות</th></tr></thead>
-            <tbody>
-              ${filtered.map(item => renderItemRow(item, client)).join('')}
-            </tbody>
+            <tbody>${filtered.map(item => renderItemRow(item, client, timedReminders)).join('')}</tbody>
           </table>
         </div>`}
     </div>`;
 }
 
-function renderItemRow(item, client) {
+function renderItemRow(item, client, timedReminders) {
   const editing = state.editingId === item.id;
   const overdue = isOverdue(item.follow_up_date);
+  const hasTimedRem = timedReminders.some(r => r.itemId === item.id && !r.fired);
   if (editing) {
-    return `<tr class="${overdue ? 'overdue' : ''}" data-id="${item.id}">
-      ${COLUMNS.map(f => `<td dir="${f.dir || 'auto'}"><input data-field="${f.key}" type="${f.type || 'text'}" dir="${f.dir || 'auto'}" value="${escapeHtml(item[f.key] || '')}" /></td>`).join('')}
+    return `<tr class="${overdue?'overdue':''}" data-id="${item.id}">
+      ${COLUMNS.map(f => `<td dir="${f.dir||'auto'}"><input data-field="${f.key}" type="${f.type||'text'}" dir="${f.dir||'auto'}" value="${escapeHtml(item[f.key]||'')}" /></td>`).join('')}
       <td class="actions-cell">
         <button class="rowSave" title="שמירה">💾</button>
         <button class="rowCancel" title="ביטול">✖️</button>
-      </td>
-    </tr>`;
+      </td></tr>`;
   }
-  return `<tr class="${overdue ? 'overdue' : ''}" data-id="${item.id}">
-    ${COLUMNS.map(f => `<td dir="${f.dir || 'auto'}">${escapeHtml(item[f.key] || '')}</td>`).join('')}
+  return `<tr class="${overdue?'overdue':''}" data-id="${item.id}">
+    ${COLUMNS.map(f => `<td dir="${f.dir||'auto'}">${escapeHtml(item[f.key]||'')}</td>`).join('')}
     <td class="actions-cell">
       <button class="rowEdit" title="עריכה">✏️</button>
       <button class="rowDelete danger" title="מחיקה">🗑</button>
-      <a class="btn-link wa" href="${buildWhatsAppLink(item)}" target="_blank" rel="noreferrer" title="שליחת תזכורת בוואטסאפ">💬</a>
-      <a class="btn-link mail" href="${buildMailtoLink(item)}" title="שליחת תזכורת במייל">✉️</a>
-    </td>
-  </tr>`;
+      <a class="btn-link wa" href="${buildWhatsAppLink(item)}" target="_blank" rel="noreferrer" title="וואטסאפ">💬</a>
+      <a class="btn-link mail" href="${buildMailtoLink(item)}" title="מייל">✉️</a>
+      <button class="btn-bell rowSetReminder ${hasTimedRem?'has-reminder':''}" data-item-id="${item.id}" data-client-id="${client.id}" title="${hasTimedRem?'יש תזכורת מתוזמנת':'הגדרת תזכורת עם שעה'}">⏰</button>
+    </td></tr>`;
 }
 
-function renderReminderPopup(reminders) {
+/* ---- Overdue reminder popup ---- */
+function renderOverduePopup(reminders) {
   const today = todayStr();
   return `
     <div class="rp-backdrop" id="rpBackdrop">
@@ -544,22 +633,19 @@ function renderReminderPopup(reminders) {
         <h2>🔔 תזכורות לטיפול</h2>
         <p class="rp-sub">${reminders.length} פריטים מחכים לטיפולך היום או באיחור</p>
         <ul class="rp-list">
-          ${reminders.map(r => {
-            const overdue = r.follow_up_date < today;
-            return `<li>
-              <div class="rp-meta">
-                <span class="rp-date">${overdue ? '⚠️ ' : ''}${escapeHtml(r.follow_up_date)}</span>
-                <span class="rp-client-tag">${escapeHtml(r.client_name)}</span>
-              </div>
-              <div class="rp-name">${escapeHtml(r.customer_name || '—')}</div>
-              ${r.task ? `<div class="rp-task">${escapeHtml(r.task)}</div>` : ''}
-              ${r.balance_due ? `<div class="rp-task">יתרה לתשלום: <strong>₪${escapeHtml(r.balance_due)}</strong></div>` : ''}
-              <div class="rp-actions">
-                <a class="btn-link wa" href="${buildWhatsAppLink(r)}" target="_blank" rel="noreferrer" title="שלחי תזכורת בוואטסאפ">💬 וואטסאפ</a>
-                <a class="btn-link mail" href="${buildMailtoLink(r)}" title="שלחי תזכורת במייל">✉️ מייל</a>
-              </div>
-            </li>`;
-          }).join('')}
+          ${reminders.map(r => `<li>
+            <div class="rp-meta">
+              <span class="rp-date-tag">${r.follow_up_date < today ? '⚠️ ' : ''}${escapeHtml(r.follow_up_date)}</span>
+              <span class="rp-client-tag">${escapeHtml(r.client_name)}</span>
+            </div>
+            <div class="rp-name">${escapeHtml(r.customer_name||'—')}</div>
+            ${r.task ? `<div class="rp-task">${escapeHtml(r.task)}</div>` : ''}
+            ${r.balance_due ? `<div class="rp-task">יתרה: <strong>₪${escapeHtml(r.balance_due)}</strong></div>` : ''}
+            <div class="rp-actions">
+              <a class="btn-link wa" href="${buildWhatsAppLink(r)}" target="_blank" rel="noreferrer">💬 וואטסאפ</a>
+              <a class="btn-link mail" href="${buildMailtoLink(r)}">✉️ מייל</a>
+            </div>
+          </li>`).join('')}
         </ul>
         <div class="rp-footer">
           <button id="rpSnooze2h">⏰ נשנש ל-2 שעות</button>
@@ -570,20 +656,78 @@ function renderReminderPopup(reminders) {
     </div>`;
 }
 
+/* ---- Timed reminder dialog (set date+time per item) ---- */
+function renderTimedReminderDialog() {
+  const itemId = state.timedReminderItemId;
+  const clientId = state.timedReminderClientId;
+  const client = state.clients.find(c => c.id === clientId);
+  const item = client ? getItems(clientId).find(it => it.id === itemId) : null;
+  if (!item) return '';
+  const existing = getTimedRemindersForItem(itemId);
+  const defaultDt = nowLocalDatetime();
+  return `
+    <div class="modal-backdrop" id="trBackdrop">
+      <div class="modal tr-modal">
+        <h2>⏰ תזכורת מתוזמנת</h2>
+        <p class="hint"><strong>${escapeHtml(item.customer_name||'לקוח')}</strong>${item.task ? ' – ' + escapeHtml(item.task) : ''}</p>
+        <form class="tr-form" id="trForm">
+          <label>תאריך ושעה לתזכורת
+            <input type="datetime-local" id="trDatetime" value="${defaultDt}" min="${defaultDt}" />
+          </label>
+          <div class="form-actions">
+            <button type="submit" class="primary">➕ הוספת תזכורת</button>
+            <button type="button" id="trCancel">ביטול</button>
+          </div>
+        </form>
+        ${existing.length ? `
+          <div class="tr-existing">
+            <strong>תזכורות קיימות לפריט זה:</strong>
+            <ul>
+              ${existing.map(r => `<li>
+                ${new Date(r.datetime).toLocaleString('he-IL')}
+                <button class="trDelete danger" data-tr-id="${r.id}" style="padding:2px 8px;font-size:12px;margin-right:6px">✖ מחיקה</button>
+              </li>`).join('')}
+            </ul>
+          </div>` : ''}
+        <div class="modal-actions"><button id="trClose">סגירה</button></div>
+      </div>
+    </div>`;
+}
+
+/* ---- Timed reminder fire popup (appears when time arrives) ---- */
+function renderTimedFirePopup(tr) {
+  const item = { customer_phone: tr.customer_phone, customer_email: tr.customer_email, customer_name: tr.customerName, balance_due: tr.balance_due, invoice_number: tr.invoice_number, task: tr.task };
+  return `
+    <div class="trp-backdrop">
+      <div class="trp-box">
+        <h3>⏰ הגיע זמן התזכורת!</h3>
+        <div class="trp-name">${escapeHtml(tr.customerName||'לקוח')}</div>
+        ${tr.task ? `<div class="trp-info">${escapeHtml(tr.task)}</div>` : ''}
+        ${tr.balance_due ? `<div class="trp-info">יתרה לתשלום: <strong>₪${escapeHtml(tr.balance_due)}</strong></div>` : ''}
+        <div class="trp-actions">
+          <a class="btn-link wa" href="${buildWhatsAppLink(item)}" target="_blank" rel="noreferrer">💬 וואטסאפ</a>
+          <a class="btn-link mail" href="${buildMailtoLink(item)}">✉️ מייל</a>
+          <button id="trpDismiss">סגירה</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ---- Client manager ---- */
 function renderClientManager() {
   return `
     <div class="modal-backdrop" id="clientBackdrop">
-      <div class="modal" id="clientModal">
+      <div class="modal">
         <h2>ניהול לקוחות</h2>
-        <p class="hint">כל לקוח יכול להיות מקושר לקובץ Google Sheets נפרד משלו (הדביקי קישור לשיתוף של הקובץ). חשוב: לקובץ צריכות להיות אותן כותרות עמודה כמו בתבנית המקורית.</p>
+        <p class="hint">כל לקוח מקושר לקובץ Google Sheets נפרד. חשוב: שם הלשונית בקובץ חייב להיות <strong>Sheet1</strong> (ברירת מחדל באנגלית).</p>
         <form class="client-form" id="clientForm">
-          <input type="hidden" name="editingId" value="${state.clientEditingId || ''}" />
-          <label>שם הלקוח <input name="name" placeholder="לדוגמה: קומפון" value="${escapeHtml(state.clientFormName || '')}" /></label>
-          <label>קישור ל-Google Sheet (אופציונלי) <input name="sheetUrl" dir="ltr" placeholder="https://docs.google.com/spreadsheets/d/..." value="${escapeHtml(state.clientFormUrl || '')}" /></label>
+          <input type="hidden" name="editingId" value="${state.clientEditingId||''}" />
+          <label>שם הלקוח <input name="name" placeholder="לדוגמה: קומפון" value="${escapeHtml(state.clientFormName||'')}" /></label>
+          <label>קישור ל-Google Sheet (אופציונלי) <input name="sheetUrl" dir="ltr" placeholder="https://docs.google.com/spreadsheets/d/..." value="${escapeHtml(state.clientFormUrl||'')}" /></label>
           ${state.clientFormError ? `<div class="error">${escapeHtml(state.clientFormError)}</div>` : ''}
           <div class="form-actions">
-            <button type="submit">${state.clientEditingId ? 'עדכון לקוח' : '➕ הוספת לקוח'}</button>
-            ${state.clientEditingId ? '<button type="button" id="cancelClientEdit">ביטול עריכה</button>' : ''}
+            <button type="submit">${state.clientEditingId ? 'עדכון' : '➕ הוספה'}</button>
+            ${state.clientEditingId ? '<button type="button" id="cancelClientEdit">ביטול</button>' : ''}
           </div>
         </form>
         <ul class="client-list">
@@ -591,8 +735,8 @@ function renderClientManager() {
             <li data-id="${c.id}">
               <div class="client-row"><strong>${escapeHtml(c.name)}</strong> ${c.sheetId ? '<span class="badge ok">מקושר ל-Sheet</span>' : '<span class="badge">ללא Sheet</span>'}</div>
               <div class="client-row-actions">
-                <button class="clientEdit">✏️ עריכה</button>
-                <button class="clientDelete danger">🗑 מחיקה</button>
+                <button class="clientEdit">✏️</button>
+                <button class="clientDelete danger">🗑</button>
               </div>
             </li>`).join('') || '<li class="empty">אין עדיין לקוחות</li>'}
         </ul>
@@ -601,49 +745,51 @@ function renderClientManager() {
     </div>`;
 }
 
+/* ---- Google setup ---- */
 function renderGoogleSetup() {
-  const hasClientId = !!GOOGLE_CLIENT_ID;
+  const hasId = !!GOOGLE_CLIENT_ID;
   return `
     <div class="modal-backdrop" id="googleBackdrop">
-      <div class="modal" id="googleModal">
+      <div class="modal">
         <h2>חיבור ל-Google Sheets</h2>
-        ${!hasClientId ? `
+        ${!hasId ? `
           <div class="step">
-            <h3>שלב 1: הגדרת חיבור ל-Google (חד פעמי לכל מכשיר)</h3>
+            <h3>שלב 1: הגדרת OAuth Client ID (חד פעמי)</h3>
             <ol class="instructions">
-              <li>היכנסי ל-<a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noreferrer">Google Cloud Console</a> וצרי פרויקט (אם אין).</li>
+              <li>היכנסי ל-<a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a> וצרי פרויקט.</li>
               <li>הפעילי את <strong>Google Sheets API</strong>.</li>
-              <li>במסך ההסכמה (OAuth consent screen) הוסיפי את כתובת המייל שלך כ"משתמש בדיקה".</li>
-              <li>צרי פרטי גישה מסוג <strong>OAuth client ID</strong> מסוג <strong>Web application</strong>, והוסיפי כ"Authorized JavaScript origins" את כתובת האתר הזה: <code>${location.origin}</code></li>
-              <li>הדביקי כאן את ה-Client ID שקיבלת (מסתיים ב-<code>.apps.googleusercontent.com</code>):</li>
+              <li>ב-OAuth consent screen הוסיפי את המייל שלך כ"משתמש בדיקה".</li>
+              <li>צרי <strong>OAuth client ID → Web application</strong>, והוסיפי כ-Authorized JavaScript origins: <code>${location.origin}</code></li>
+              <li>הדביקי את ה-Client ID כאן:</li>
             </ol>
             <input id="clientIdInput" dir="ltr" placeholder="xxxxxxxxxx.apps.googleusercontent.com" style="width:100%" />
             <div class="form-actions" style="margin-top:8px"><button id="saveClientId">שמירה</button></div>
           </div>` : `
           <div class="step">
             <h3>שלב 2: התחברות לחשבון Google</h3>
-            <p>${isGoogleAuthorized() ? '🟢 מחוברת לחשבון Google.' : 'לחצי על הכפתור ואשרי גישה לחשבון ה-Google שלך (Sheets בלבד).'}</p>
-            <button id="connectGoogleBtn">🔐 ${isGoogleAuthorized() ? 'התחברות מחדש' : 'התחברות לחשבון Google'}</button>
-            <p class="hint">החיבור נשמר רק במכשיר/דפדפן הזה (כמו ביתר האפליקציות). במכשיר חדש תצטרכי להתחבר פעם אחת.</p>
-            <button id="resetClientId">🔁 שינוי Client ID</button>
+            <p>${isGoogleAuthorized() ? '🟢 מחוברת.' : 'לחצי על הכפתור ואשרי גישה ל-Sheets.'}</p>
+            <button id="connectGoogleBtn">🔐 ${isGoogleAuthorized() ? 'חידוש חיבור' : 'התחברות לחשבון Google'}</button>
+            <p class="hint" style="margin-top:10px">Client ID: <code style="font-size:11px">${GOOGLE_CLIENT_ID.slice(0,20)}…</code></p>
+            <button id="resetClientId" style="margin-top:6px">🔁 שינוי Client ID</button>
           </div>`}
         <div class="modal-actions"><button id="closeGoogleSetup">סגירה</button></div>
       </div>
     </div>`;
 }
 
+/* ---- Share ---- */
 function renderShare() {
   const url = location.href.split('#')[0];
   return `
     <div class="modal-backdrop" id="shareBackdrop">
-      <div class="modal" id="shareModal">
+      <div class="modal">
         <h2>שיתוף קישור לאפליקציה</h2>
-        <p class="hint">שלחי את הקישור הזה לעצמך (במייל / וואטסאפ) כדי לפתוח את האפליקציה מכל מכשיר — נייד, טאבלט או מחשב אחר. בכל מכשיר חדש תצטרכי להתחבר פעם אחת לחשבון Google ולהוסיף/לבחור את הלקוח הרצוי.</p>
+        <p class="hint">שלחי לעצמך כדי לפתוח מכל מכשיר.</p>
         <div class="share-link">${escapeHtml(url)}</div>
         <div class="qr-box"><img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}" /></div>
         <div class="modal-actions">
-          <a class="btn-link wa" target="_blank" rel="noreferrer" href="https://wa.me/?text=${encodeURIComponent('קישור לאפליקציית ניהול הגבייה: ' + url)}">💬 שליחה בוואטסאפ</a>
-          <a class="btn-link mail" href="mailto:?subject=${encodeURIComponent('קישור לאפליקציית ניהול גבייה')}&body=${encodeURIComponent(url)}">✉️ שליחה במייל</a>
+          <a class="btn-link wa" target="_blank" rel="noreferrer" href="https://wa.me/?text=${encodeURIComponent('קישור לאפליקציית ניהול הגבייה: ' + url)}">💬 וואטסאפ</a>
+          <a class="btn-link mail" href="mailto:?subject=${encodeURIComponent('ניהול גבייה')}&body=${encodeURIComponent(url)}">✉️ מייל</a>
           <button id="closeShare">סגירה</button>
         </div>
       </div>
@@ -652,60 +798,92 @@ function renderShare() {
 
 /* =========================== Event binding ============================ */
 function bindEvents() {
-  const $ = (sel) => root.querySelector(sel);
-  const $$ = (sel) => [...root.querySelectorAll(sel)];
+  const $ = s => root.querySelector(s);
+  const $$ = s => [...root.querySelectorAll(s)];
 
-  $('#clientSelect')?.addEventListener('change', (e) => setActiveClient(e.target.value));
+  // Topbar
+  $('#clientSelect')?.addEventListener('change', e => setActiveClient(e.target.value));
+  $('#btnAllData')?.addEventListener('click', () => { state.showAllData = !state.showAllData; render(); });
+  $('#btnCloseAllData')?.addEventListener('click', () => { state.showAllData = false; render(); });
   $('#btnClients')?.addEventListener('click', () => { state.showClientManager = true; state.clientEditingId = null; state.clientFormName = ''; state.clientFormUrl = ''; state.clientFormError = ''; render(); });
   $('#btnAddClientEmpty')?.addEventListener('click', () => { state.showClientManager = true; render(); });
   $('#btnGoogle')?.addEventListener('click', () => { state.showGoogleSetup = true; render(); });
   $('#btnShare')?.addEventListener('click', () => { state.showShare = true; render(); });
   $('#btnSync')?.addEventListener('click', doSync);
+  $('#btnShowReminders')?.addEventListener('click', () => { state.showReminderPopup = true; render(); });
+  $('#allDataSearch')?.addEventListener('input', e => { state.allDataSearch = e.target.value; render(); });
+
+  // Reminders bar
   $('#remindersToggle')?.addEventListener('click', () => { state.remindersOpen = !state.remindersOpen; render(); });
   $$('.reminders-list li').forEach(li => li.addEventListener('click', () => setActiveClient(li.dataset.client)));
-
-  // Items table
-  $('#searchInput')?.addEventListener('input', (e) => { state.search = e.target.value; render(); });
-  $('#btnToggleAdd')?.addEventListener('click', () => { state.showAddForm = !state.showAddForm; render(); });
-  $('#addForm')?.addEventListener('submit', onAddItem);
-  $$('.rowEdit').forEach(b => b.addEventListener('click', (e) => { state.editingId = e.target.closest('tr').dataset.id; render(); }));
-  $$('.rowCancel').forEach(b => b.addEventListener('click', () => { state.editingId = null; render(); }));
-  $$('.rowDelete').forEach(b => b.addEventListener('click', (e) => onDeleteItem(e.target.closest('tr').dataset.id)));
-  $$('.rowSave').forEach(b => b.addEventListener('click', (e) => onSaveItem(e.target.closest('tr'))));
-
-  // Client manager
-  $('#closeClientManager')?.addEventListener('click', () => { state.showClientManager = false; render(); });
-  $('#clientBackdrop')?.addEventListener('click', (e) => { if (e.target.id === 'clientBackdrop') { state.showClientManager = false; render(); } });
-  $('#clientForm')?.addEventListener('submit', onClientFormSubmit);
-  $('#cancelClientEdit')?.addEventListener('click', () => { state.clientEditingId = null; state.clientFormName = ''; state.clientFormUrl = ''; render(); });
-  $$('.clientEdit').forEach(b => b.addEventListener('click', (e) => onEditClient(e.target.closest('li').dataset.id)));
-  $$('.clientDelete').forEach(b => b.addEventListener('click', (e) => onDeleteClient(e.target.closest('li').dataset.id)));
-
-  // Google setup
-  $('#closeGoogleSetup')?.addEventListener('click', () => { state.showGoogleSetup = false; render(); });
-  $('#googleBackdrop')?.addEventListener('click', (e) => { if (e.target.id === 'googleBackdrop') { state.showGoogleSetup = false; render(); } });
-  $('#saveClientId')?.addEventListener('click', () => {
-    const v = $('#clientIdInput').value.trim();
-    if (!v.endsWith('.apps.googleusercontent.com')) { alert('נראה שזה לא Client ID תקין'); return; }
-    localStorage.setItem('collection_google_client_id', v);
-    location.reload();
-  });
-  $('#connectGoogleBtn')?.addEventListener('click', connectGoogle);
-  $('#resetClientId')?.addEventListener('click', () => { if (confirm('לאפס את ה-Client ID השמור?')) { localStorage.removeItem('collection_google_client_id'); location.reload(); } });
-
-  // Share
-  $('#closeShare')?.addEventListener('click', () => { state.showShare = false; render(); });
-  $('#shareBackdrop')?.addEventListener('click', (e) => { if (e.target.id === 'shareBackdrop') { state.showShare = false; render(); } });
 
   // Notification bar
   $('#btnEnableNotif')?.addEventListener('click', () => requestNotif());
   $('#btnDismissNotifBar')?.addEventListener('click', () => { localStorage.setItem('collection_notifbar_dismissed', todayStr()); render(); });
 
-  // Reminder popup
+  // Items table
+  $('#searchInput')?.addEventListener('input', e => { state.search = e.target.value; render(); });
+  $('#btnToggleAdd')?.addEventListener('click', () => { state.showAddForm = !state.showAddForm; render(); });
+  $('#addForm')?.addEventListener('submit', onAddItem);
+  $$('.rowEdit').forEach(b => b.addEventListener('click', e => { state.editingId = e.target.closest('tr').dataset.id; render(); }));
+  $$('.rowCancel').forEach(b => b.addEventListener('click', () => { state.editingId = null; render(); }));
+  $$('.rowDelete').forEach(b => b.addEventListener('click', e => onDeleteItem(e.target.closest('tr').dataset.id)));
+  $$('.rowSave').forEach(b => b.addEventListener('click', e => onSaveItem(e.target.closest('tr'))));
+  $$('.rowSetReminder').forEach(b => b.addEventListener('click', e => {
+    state.timedReminderItemId = b.dataset.itemId;
+    state.timedReminderClientId = b.dataset.clientId;
+    render();
+  }));
+
+  // Overdue popup
   $('#rpClose')?.addEventListener('click', () => { state.showReminderPopup = false; render(); });
   $('#rpDismissDay')?.addEventListener('click', () => { setDismissedDate(); state.showReminderPopup = false; render(); });
-  $('#rpSnooze2h')?.addEventListener('click', () => { setReminderSnooze(Date.now() + 2 * 60 * 60 * 1000); state.showReminderPopup = false; render(); });
-  $('#rpBackdrop')?.addEventListener('click', (e) => { if (e.target.id === 'rpBackdrop') { state.showReminderPopup = false; render(); } });
+  $('#rpSnooze2h')?.addEventListener('click', () => { setReminderSnooze(Date.now() + 2*60*60*1000); state.showReminderPopup = false; render(); });
+  $('#rpBackdrop')?.addEventListener('click', e => { if (e.target.id === 'rpBackdrop') { state.showReminderPopup = false; render(); } });
+
+  // Timed reminder dialog
+  $('#trForm')?.addEventListener('submit', e => {
+    e.preventDefault();
+    const dt = $('#trDatetime').value;
+    if (!dt) { alert('יש לבחור תאריך ושעה'); return; }
+    if (new Date(dt).getTime() <= Date.now()) { alert('יש לבחור זמן עתידי'); return; }
+    const client = state.clients.find(c => c.id === state.timedReminderClientId);
+    const item = client ? getItems(state.timedReminderClientId).find(it => it.id === state.timedReminderItemId) : null;
+    if (!item) return;
+    addTimedReminder(state.timedReminderItemId, state.timedReminderClientId, dt, item);
+    render();
+    alert(`✅ תזכורת נקבעה ל-${new Date(dt).toLocaleString('he-IL')}`);
+  });
+  $('#trClose')?.addEventListener('click', () => { state.timedReminderItemId = null; render(); });
+  $('#trCancel')?.addEventListener('click', () => { state.timedReminderItemId = null; render(); });
+  $('#trBackdrop')?.addEventListener('click', e => { if (e.target.id === 'trBackdrop') { state.timedReminderItemId = null; render(); } });
+  $$('.trDelete').forEach(b => b.addEventListener('click', () => { deleteTimedReminder(b.dataset.trId); render(); }));
+
+  // Timed fire popup
+  $('#trpDismiss')?.addEventListener('click', () => { state.firingTimedReminder = null; render(); });
+
+  // Client manager
+  $('#closeClientManager')?.addEventListener('click', () => { state.showClientManager = false; render(); });
+  $('#clientBackdrop')?.addEventListener('click', e => { if (e.target.id === 'clientBackdrop') { state.showClientManager = false; render(); } });
+  $('#clientForm')?.addEventListener('submit', onClientFormSubmit);
+  $('#cancelClientEdit')?.addEventListener('click', () => { state.clientEditingId = null; state.clientFormName = ''; state.clientFormUrl = ''; render(); });
+  $$('.clientEdit').forEach(b => b.addEventListener('click', e => onEditClient(e.target.closest('li').dataset.id)));
+  $$('.clientDelete').forEach(b => b.addEventListener('click', e => onDeleteClient(e.target.closest('li').dataset.id)));
+
+  // Google setup
+  $('#closeGoogleSetup')?.addEventListener('click', () => { state.showGoogleSetup = false; render(); });
+  $('#googleBackdrop')?.addEventListener('click', e => { if (e.target.id === 'googleBackdrop') { state.showGoogleSetup = false; render(); } });
+  $('#saveClientId')?.addEventListener('click', () => {
+    const v = $('#clientIdInput').value.trim();
+    if (!v.endsWith('.apps.googleusercontent.com')) { alert('נראה שזה לא Client ID תקין'); return; }
+    localStorage.setItem('collection_google_client_id', v); location.reload();
+  });
+  $('#connectGoogleBtn')?.addEventListener('click', connectGoogle);
+  $('#resetClientId')?.addEventListener('click', () => { if (confirm('לאפס את ה-Client ID?')) { localStorage.removeItem('collection_google_client_id'); location.reload(); } });
+
+  // Share
+  $('#closeShare')?.addEventListener('click', () => { state.showShare = false; render(); });
+  $('#shareBackdrop')?.addEventListener('click', e => { if (e.target.id === 'shareBackdrop') { state.showShare = false; render(); } });
 }
 
 /* =========================== Item actions ============================ */
@@ -713,36 +891,30 @@ function onAddItem(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
   const item = { id: uid(), updatedAt: nowIso() };
-  COLUMNS.forEach(c => item[c.key] = (fd.get(c.key) || '').toString().trim());
+  COLUMNS.forEach(c => item[c.key] = (fd.get(c.key)||'').toString().trim());
   const client = activeClient();
   const items = getItems(client.id);
-  items.push(item);
-  setItems(client.id, items);
-  state.showAddForm = false;
-  render();
-  if (client.sheetId && isGoogleAuthorized()) pushSingleItem(client, item).then(() => { setItems(client.id, items); });
+  items.push(item); setItems(client.id, items);
+  state.showAddForm = false; render();
+  if (client.sheetId && isGoogleAuthorized()) pushSingleItem(client, item).then(() => setItems(client.id, items));
 }
-
 function onDeleteItem(id) {
-  const client = activeClient();
   if (!confirm('למחוק את הרשומה?')) return;
-  let items = getItems(client.id);
-  items = items.filter(it => it.id !== id);
+  const client = activeClient();
+  let items = getItems(client.id).filter(it => it.id !== id);
   setItems(client.id, items);
+  // also delete any timed reminders for this item
+  setTimedReminders(getTimedReminders().filter(r => r.itemId !== id));
   render();
 }
-
 function onSaveItem(tr) {
   const client = activeClient();
   const id = tr.dataset.id;
   const items = getItems(client.id);
-  const item = items.find(it => it.id === id);
-  if (!item) return;
+  const item = items.find(it => it.id === id); if (!item) return;
   tr.querySelectorAll('[data-field]').forEach(inp => { item[inp.dataset.field] = inp.value.trim(); });
   item.updatedAt = nowIso();
-  setItems(client.id, items);
-  state.editingId = null;
-  render();
+  setItems(client.id, items); state.editingId = null; render();
   if (client.sheetId && isGoogleAuthorized()) pushSingleItem(client, item).then(() => setItems(client.id, items));
 }
 
@@ -750,9 +922,9 @@ function onSaveItem(tr) {
 function onClientFormSubmit(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
-  const name = (fd.get('name') || '').toString().trim();
-  const sheetUrl = (fd.get('sheetUrl') || '').toString().trim();
-  const editingId = (fd.get('editingId') || '').toString();
+  const name = (fd.get('name')||'').toString().trim();
+  const sheetUrl = (fd.get('sheetUrl')||'').toString().trim();
+  const editingId = (fd.get('editingId')||'').toString();
   if (!name) { state.clientFormError = 'יש להזין שם לקוח'; render(); return; }
   const sheetId = extractSheetId(sheetUrl);
   if (editingId) {
@@ -767,33 +939,32 @@ function onClientFormSubmit(e) {
   render();
 }
 function onEditClient(id) {
-  const c = state.clients.find(x => x.id === id);
-  if (!c) return;
+  const c = state.clients.find(x => x.id === id); if (!c) return;
   state.clientEditingId = id; state.clientFormName = c.name; state.clientFormUrl = c.sheetUrl || ''; state.clientFormError = '';
   render();
 }
 function onDeleteClient(id) {
-  const c = state.clients.find(x => x.id === id);
-  if (!c) return;
-  if (!confirm(`למחוק את הלקוח "${c.name}"? הרשומות שלו יימחקו מהאפליקציה (לא מ-Google Sheets).`)) return;
+  const c = state.clients.find(x => x.id === id); if (!c) return;
+  if (!confirm(`למחוק את "${c.name}"? הרשומות יימחקו מהאפליקציה (לא מ-Sheets).`)) return;
   state.clients = state.clients.filter(x => x.id !== id);
   localStorage.removeItem('collection_items_' + id);
   localStorage.removeItem('collection_lastsync_' + id);
+  setTimedReminders(getTimedReminders().filter(r => r.clientId !== id));
   persistClients();
   if (state.activeClientId === id) state.activeClientId = state.clients[0]?.id || '';
   render();
 }
 
-/* =========================== Sync action ============================ */
+/* =========================== Sync ============================ */
 async function doSync() {
   const client = activeClient();
-  if (!client || !client.sheetId) { state.syncMsg = 'ללקוח זה אין קישור ל-Google Sheet'; render(); return; }
+  if (!client?.sheetId) { state.syncMsg = 'ללקוח זה אין קישור ל-Google Sheet'; render(); return; }
   if (!GOOGLE_CLIENT_ID) { state.showGoogleSetup = true; render(); return; }
   state.syncing = true; state.syncMsg = 'מסנכרן...'; render();
   try {
     const r = await syncClient(client);
-    state.syncMsg = `סונכרן ✓ (${r.pulled} חדשים מהטבלה, ${r.pushedNew} נשלחו לטבלה, ${r.updated + r.pushedUpdates} עודכנו)`;
-  } catch (e) {
+    state.syncMsg = `סונכרן ✓ (${r.pulled} חדשים מהטבלה, ${r.pushedNew} נשלחו, ${r.updated + r.pushedUpdates} עודכנו)`;
+  } catch(e) {
     state.syncMsg = 'שגיאת סנכרון: ' + e.message;
   } finally {
     state.syncing = false; render();
@@ -802,28 +973,27 @@ async function doSync() {
 }
 
 /* =========================== Init ============================ */
-function checkAndShowReminders() {
+function checkAndShowOverdueReminders() {
   const reminders = getAllReminders();
-  if (!reminders.length) return;
-  if (isReminderSnoozed()) return;
-  if (getDismissedDate() === todayStr()) return;
+  if (!reminders.length || isReminderSnoozed() || getDismissedDate() === todayStr()) return;
   state.showReminderPopup = true;
-  fireReminderNotifs(reminders);
+  fireOverdueNotifs(reminders);
   render();
 }
 
 window.addEventListener('load', () => {
   initGoogleAuth();
   render();
-  // show reminder popup shortly after load
-  setTimeout(checkAndShowReminders, 1200);
+  setTimeout(checkAndShowOverdueReminders, 1200);
   // auto-sync every 60s
   setInterval(() => {
     const c = activeClient();
-    if (c && c.sheetId && isGoogleAuthorized() && !state.syncing) doSync();
+    if (c?.sheetId && isGoogleAuthorized() && !state.syncing) doSync();
   }, 60000);
-  // re-check reminders every 30 minutes
-  setInterval(checkAndShowReminders, 30 * 60 * 1000);
+  // check timed reminders every 30 seconds
+  setInterval(checkTimedReminders, 30000);
+  // re-check overdue every 30 min
+  setInterval(checkAndShowOverdueReminders, 30 * 60 * 1000);
 });
 </script>
 </body>
