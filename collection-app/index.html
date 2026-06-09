@@ -77,6 +77,25 @@ td input{width:120px}
 .instructions code{background:#f1f1f5;padding:1px 6px;border-radius:4px}
 .qr-box{text-align:center;margin:10px 0}
 .share-link{direction:ltr;text-align:left;word-break:break-all;background:#f6f7fb;border-radius:6px;padding:8px;font-size:12.5px}
+/* ---- Reminder popup ---- */
+.rp-backdrop{position:fixed;inset:0;background:rgba(20,20,30,.45);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:60px 16px 16px}
+.rp-box{background:#fff;border-radius:16px;padding:22px;max-width:520px;width:100%;box-shadow:0 8px 36px rgba(0,0,0,.2);max-height:80vh;overflow-y:auto;animation:rp-in .25s ease}
+@keyframes rp-in{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:none}}
+.rp-box h2{margin:0 0 4px;font-size:19px;color:#b3261e}
+.rp-box .rp-sub{font-size:13px;color:#777;margin:0 0 14px}
+.rp-list{list-style:none;padding:0;margin:0 0 14px}
+.rp-list li{padding:10px 0;border-bottom:1px solid #f0ece3;display:flex;flex-direction:column;gap:5px}
+.rp-list li:last-child{border-bottom:none}
+.rp-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.rp-date{font-size:12px;color:#b3261e;font-weight:700;background:#fbe9e9;border-radius:999px;padding:2px 8px}
+.rp-client-tag{font-size:12px;background:#eef0f5;border-radius:999px;padding:2px 8px;color:#555}
+.rp-name{font-weight:600;font-size:14px}
+.rp-task{font-size:13px;color:#666}
+.rp-actions{display:flex;gap:6px;margin-top:4px}
+.rp-footer{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;border-top:1px solid #eee;padding-top:14px;margin-top:4px}
+/* ---- Notification bar ---- */
+.notif-bar{background:#fffbf0;border:1px solid #f0c779;border-radius:8px;padding:8px 14px;font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.notif-bar button{padding:5px 11px;font-size:13px}
 </style>
 </head>
 <body>
@@ -327,6 +346,39 @@ function buildMailtoLink(item) {
 function isOverdue(d) { return !!d && d <= todayStr(); }
 function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+/* =========================== Notification helpers ============================ */
+function notifPermission() { return typeof Notification !== 'undefined' ? Notification.permission : 'denied'; }
+function canNotif() { return notifPermission() === 'granted'; }
+async function requestNotif() {
+  if (typeof Notification === 'undefined') return false;
+  const p = await Notification.requestPermission();
+  render();
+  return p === 'granted';
+}
+const _notifiedToday = new Set();
+function sendBrowserNotif(title, body) {
+  if (!canNotif()) return;
+  try { new Notification(title, { body, icon: 'icon.png' }); } catch(e) {}
+}
+function fireReminderNotifs(reminders) {
+  const today = todayStr();
+  reminders.forEach(r => {
+    const key = r.id + '_' + today;
+    if (!_notifiedToday.has(key)) {
+      _notifiedToday.add(key);
+      const name = r.customer_name || 'לקוח';
+      const task = r.task || '';
+      sendBrowserNotif(`🔔 תזכורת גבייה – ${name}`, `${task}${r.balance_due ? ' | יתרה: ₪' + r.balance_due : ''}`);
+    }
+  });
+}
+
+function getReminderSnooze() { return Number(localStorage.getItem('collection_reminder_snooze') || 0); }
+function setReminderSnooze(ms) { localStorage.setItem('collection_reminder_snooze', String(ms)); }
+function isReminderSnoozed() { return Date.now() < getReminderSnooze(); }
+function getDismissedDate() { return localStorage.getItem('collection_reminder_dismissed') || ''; }
+function setDismissedDate() { localStorage.setItem('collection_reminder_dismissed', todayStr()); }
+
 /* =========================== App State ============================ */
 const state = {
   clients: getClients(),
@@ -339,6 +391,7 @@ const state = {
   remindersOpen: false,
   syncing: false,
   syncMsg: '',
+  showReminderPopup: false,
 };
 if (!state.activeClientId || !state.clients.some(c => c.id === state.activeClientId)) {
   state.activeClientId = state.clients[0]?.id || '';
@@ -387,6 +440,13 @@ function render() {
 
       ${state.syncMsg ? `<div class="sync-msg">${escapeHtml(state.syncMsg)}</div>` : ''}
 
+      ${reminders.length && notifPermission() === 'default' && localStorage.getItem('collection_notifbar_dismissed') !== todayStr() ? `
+        <div class="notif-bar">
+          🔔 <span>הפעילי התראות דפדפן כדי לקבל תזכורות גם כשהאפליקציה סגורה</span>
+          <button id="btnEnableNotif">הפעלת התראות</button>
+          <button id="btnDismissNotifBar" style="background:none;border:none;color:#aaa;padding:2px 6px;font-size:16px">✖</button>
+        </div>` : ''}
+
       ${reminders.length ? `
         <div class="reminders-bar">
           <button class="reminders-toggle" id="remindersToggle">🔔 ${reminders.length} תזכורות לטיפול היום או באיחור ${state.remindersOpen ? '▲' : '▼'}</button>
@@ -413,6 +473,7 @@ function render() {
     ${state.showClientManager ? renderClientManager() : ''}
     ${state.showGoogleSetup ? renderGoogleSetup() : ''}
     ${state.showShare ? renderShare() : ''}
+    ${state.showReminderPopup && reminders.length ? renderReminderPopup(reminders) : ''}
   `;
 
   bindEvents();
@@ -473,6 +534,40 @@ function renderItemRow(item, client) {
       <a class="btn-link mail" href="${buildMailtoLink(item)}" title="שליחת תזכורת במייל">✉️</a>
     </td>
   </tr>`;
+}
+
+function renderReminderPopup(reminders) {
+  const today = todayStr();
+  return `
+    <div class="rp-backdrop" id="rpBackdrop">
+      <div class="rp-box">
+        <h2>🔔 תזכורות לטיפול</h2>
+        <p class="rp-sub">${reminders.length} פריטים מחכים לטיפולך היום או באיחור</p>
+        <ul class="rp-list">
+          ${reminders.map(r => {
+            const overdue = r.follow_up_date < today;
+            return `<li>
+              <div class="rp-meta">
+                <span class="rp-date">${overdue ? '⚠️ ' : ''}${escapeHtml(r.follow_up_date)}</span>
+                <span class="rp-client-tag">${escapeHtml(r.client_name)}</span>
+              </div>
+              <div class="rp-name">${escapeHtml(r.customer_name || '—')}</div>
+              ${r.task ? `<div class="rp-task">${escapeHtml(r.task)}</div>` : ''}
+              ${r.balance_due ? `<div class="rp-task">יתרה לתשלום: <strong>₪${escapeHtml(r.balance_due)}</strong></div>` : ''}
+              <div class="rp-actions">
+                <a class="btn-link wa" href="${buildWhatsAppLink(r)}" target="_blank" rel="noreferrer" title="שלחי תזכורת בוואטסאפ">💬 וואטסאפ</a>
+                <a class="btn-link mail" href="${buildMailtoLink(r)}" title="שלחי תזכורת במייל">✉️ מייל</a>
+              </div>
+            </li>`;
+          }).join('')}
+        </ul>
+        <div class="rp-footer">
+          <button id="rpSnooze2h">⏰ נשנש ל-2 שעות</button>
+          <button id="rpDismissDay">סגור להיום</button>
+          <button id="rpClose">סגירה</button>
+        </div>
+      </div>
+    </div>`;
 }
 
 function renderClientManager() {
@@ -601,6 +696,16 @@ function bindEvents() {
   // Share
   $('#closeShare')?.addEventListener('click', () => { state.showShare = false; render(); });
   $('#shareBackdrop')?.addEventListener('click', (e) => { if (e.target.id === 'shareBackdrop') { state.showShare = false; render(); } });
+
+  // Notification bar
+  $('#btnEnableNotif')?.addEventListener('click', () => requestNotif());
+  $('#btnDismissNotifBar')?.addEventListener('click', () => { localStorage.setItem('collection_notifbar_dismissed', todayStr()); render(); });
+
+  // Reminder popup
+  $('#rpClose')?.addEventListener('click', () => { state.showReminderPopup = false; render(); });
+  $('#rpDismissDay')?.addEventListener('click', () => { setDismissedDate(); state.showReminderPopup = false; render(); });
+  $('#rpSnooze2h')?.addEventListener('click', () => { setReminderSnooze(Date.now() + 2 * 60 * 60 * 1000); state.showReminderPopup = false; render(); });
+  $('#rpBackdrop')?.addEventListener('click', (e) => { if (e.target.id === 'rpBackdrop') { state.showReminderPopup = false; render(); } });
 }
 
 /* =========================== Item actions ============================ */
@@ -697,14 +802,28 @@ async function doSync() {
 }
 
 /* =========================== Init ============================ */
+function checkAndShowReminders() {
+  const reminders = getAllReminders();
+  if (!reminders.length) return;
+  if (isReminderSnoozed()) return;
+  if (getDismissedDate() === todayStr()) return;
+  state.showReminderPopup = true;
+  fireReminderNotifs(reminders);
+  render();
+}
+
 window.addEventListener('load', () => {
   initGoogleAuth();
   render();
+  // show reminder popup shortly after load
+  setTimeout(checkAndShowReminders, 1200);
   // auto-sync every 60s
   setInterval(() => {
     const c = activeClient();
     if (c && c.sheetId && isGoogleAuthorized() && !state.syncing) doSync();
   }, 60000);
+  // re-check reminders every 30 minutes
+  setInterval(checkAndShowReminders, 30 * 60 * 1000);
 });
 </script>
 </body>
