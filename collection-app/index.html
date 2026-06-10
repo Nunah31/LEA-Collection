@@ -475,7 +475,7 @@ const state = {
   timedReminderItemId: null,   // which item has the timed reminder dialog open
   timedReminderClientId: null,
   firingTimedReminder: null,   // currently firing timed reminder
-  clientEditingId: null, clientFormName: '', clientFormUrl: '', clientFormError: '',
+  clientEditingId: null, clientFormName: '', clientFormUrl: '', clientFormTab: '', clientFormError: '',
   showShare: false,
 };
 if (!state.activeClientId || !state.clients.some(c => c.id === state.activeClientId))
@@ -763,6 +763,10 @@ function renderClientManager() {
           <input type="hidden" name="editingId" value="${state.clientEditingId||''}" />
           <label>שם הלקוח <input name="name" placeholder="לדוגמה: קומפון" value="${escapeHtml(state.clientFormName||'')}" /></label>
           <label>קישור ל-Google Sheet (אופציונלי) <input name="sheetUrl" dir="ltr" placeholder="https://docs.google.com/spreadsheets/d/..." value="${escapeHtml(state.clientFormUrl||'')}" /></label>
+          <label>שם הלשונית בשיטס
+            <input name="sheetTab" dir="ltr" placeholder="Sheet1" value="${escapeHtml(state.clientFormTab||'')}" />
+            <span style="font-size:12px;color:#888">אם אינך יודעת — פתחי את קובץ ה-Sheets וראי את השם בתחתית הדף (לשונית). ברירת מחדל: Sheet1</span>
+          </label>
           ${state.clientFormError ? `<div class="error">${escapeHtml(state.clientFormError)}</div>` : ''}
           <div class="form-actions">
             <button type="submit">${state.clientEditingId ? 'עדכון' : '➕ הוספה'}</button>
@@ -850,7 +854,7 @@ function bindEvents() {
   $('#clientSelect')?.addEventListener('change', e => setActiveClient(e.target.value));
   $('#btnAllData')?.addEventListener('click', () => { state.showAllData = !state.showAllData; render(); });
   $('#btnCloseAllData')?.addEventListener('click', () => { state.showAllData = false; render(); });
-  $('#btnClients')?.addEventListener('click', () => { state.showClientManager = true; state.clientEditingId = null; state.clientFormName = ''; state.clientFormUrl = ''; state.clientFormError = ''; render(); });
+  $('#btnClients')?.addEventListener('click', () => { state.showClientManager = true; state.clientEditingId = null; state.clientFormName = ''; state.clientFormUrl = ''; state.clientFormTab = ''; state.clientFormError = ''; render(); });
   $('#btnAddClientEmpty')?.addEventListener('click', () => { state.showClientManager = true; render(); });
   $('#btnGoogle')?.addEventListener('click', () => { state.showGoogleSetup = true; render(); });
   $('#btnShare')?.addEventListener('click', () => { state.showShare = true; render(); });
@@ -911,7 +915,7 @@ function bindEvents() {
   $('#closeClientManager')?.addEventListener('click', () => { state.showClientManager = false; render(); });
   $('#clientBackdrop')?.addEventListener('click', e => { if (e.target.id === 'clientBackdrop') { state.showClientManager = false; render(); } });
   $('#clientForm')?.addEventListener('submit', onClientFormSubmit);
-  $('#cancelClientEdit')?.addEventListener('click', () => { state.clientEditingId = null; state.clientFormName = ''; state.clientFormUrl = ''; render(); });
+  $('#cancelClientEdit')?.addEventListener('click', () => { state.clientEditingId = null; state.clientFormName = ''; state.clientFormUrl = ''; state.clientFormTab = ''; render(); });
   $$('.clientEdit').forEach(b => b.addEventListener('click', e => onEditClient(e.target.closest('li').dataset.id)));
   $$('.clientDelete').forEach(b => b.addEventListener('click', e => onDeleteClient(e.target.closest('li').dataset.id)));
 
@@ -973,18 +977,19 @@ async function onClientFormSubmit(e) {
   if (!name) { state.clientFormError = 'יש להזין שם לקוח'; render(); return; }
   const sheetId = extractSheetId(sheetUrl);
   const gid = extractGid(sheetUrl);
+  const manualTab = (fd.get('sheetTab')||'').toString().trim();
 
-  // Resolve tab name from gid if possible
-  state.clientFormError = sheetId && gid ? 'מזהה שם לשונית...' : '';
-  render();
-  let sheetTab = 'Sheet1';
-  if (sheetId && gid) {
+  // Determine tab name: manual entry wins; else try to resolve from gid; else default Sheet1
+  let sheetTab = manualTab || 'Sheet1';
+  if (!manualTab && sheetId && gid) {
+    state.clientFormError = 'מזהה שם לשונית אוטומטית...';
+    render();
     const resolved = await resolveTabName(sheetId, gid);
     if (resolved) {
       sheetTab = resolved;
+      state.clientFormError = '';
     } else {
-      // Could not resolve — keep Sheet1 as fallback, warn user
-      state.clientFormError = 'לא הצלחנו לזהות את שם הלשונית אוטומטית. ודאי ששם הלשונית בשיטס הוא Sheet1, או ערכי את הלקוח לאחר ההתחברות ל-Google.';
+      state.clientFormError = '';
     }
   }
 
@@ -995,13 +1000,13 @@ async function onClientFormSubmit(e) {
     state.clients.push({ id: uid(), name, sheetUrl, sheetId, sheetTab });
   }
   persistClients();
-  state.clientEditingId = null; state.clientFormName = ''; state.clientFormUrl = ''; state.clientFormError = '';
+  state.clientEditingId = null; state.clientFormName = ''; state.clientFormUrl = ''; state.clientFormTab = ''; state.clientFormError = '';
   if (!state.activeClientId) state.activeClientId = state.clients[0]?.id || '';
   render();
 }
 function onEditClient(id) {
   const c = state.clients.find(x => x.id === id); if (!c) return;
-  state.clientEditingId = id; state.clientFormName = c.name; state.clientFormUrl = c.sheetUrl || ''; state.clientFormError = '';
+  state.clientEditingId = id; state.clientFormName = c.name; state.clientFormUrl = c.sheetUrl || ''; state.clientFormTab = c.sheetTab || ''; state.clientFormError = '';
   render();
 }
 function onDeleteClient(id) {
