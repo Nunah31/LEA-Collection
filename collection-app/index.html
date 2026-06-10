@@ -282,7 +282,7 @@ async function sheetsAppend(id, range, values) {
   return res.json();
 }
 
-const RANGE_FOR = (tab) => `${tab || 'Sheet1'}!A1:J`;
+const RANGE_FOR = (tab) => `'${(tab || 'Sheet1').replace(/'/g, "''")}'!A1:J`;
 function rowToItem(row) { const o = {}; COLUMNS.forEach((c,i) => o[c.key] = row[i] ?? ''); return o; }
 function itemToRow(item) { return COLUMNS.map((c) => item[c.key] ?? ''); }
 function rowsEqual(a, b) { return COLUMNS.every((c) => (a[c.key] ?? '') === (b[c.key] ?? '')); }
