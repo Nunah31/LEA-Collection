@@ -135,8 +135,9 @@ tr.overdue td:nth-child(3){color:#b3261e;font-weight:700}
 .trp-actions{display:flex;gap:8px;flex-wrap:wrap}
 /* all data screen */
 .all-data-screen{background:#fff;border-radius:12px;padding:16px;border:1px solid #e3e5ea}
-.all-data-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.all-data-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
 .all-data-toolbar h2{margin:0;font-size:18px;flex:1}
+.all-data-filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding:10px;background:#f8f9fc;border-radius:8px;border:1px solid #e3e5ea}
 .client-col{font-size:12px;background:#eef0f5;border-radius:999px;padding:2px 8px;display:inline-block;color:#555}
 </style>
 </head>
@@ -596,6 +597,10 @@ const state = {
   editingId: null,
   search: '',
   allDataSearch: '',
+  allDataClientFilter: '',
+  allDataDateFrom: '',
+  allDataDateTo: '',
+  allDataEditingId: null,
   remindersOpen: false,
   syncing: false,
   syncMsg: '',
@@ -694,21 +699,45 @@ function render() {
 /* ---- All data screen ---- */
 function renderAllData() {
   const search = state.allDataSearch.trim().toLowerCase();
-  const today = todayStr();
+  const clientFilter = state.allDataClientFilter;
+  const dateFrom = state.allDataDateFrom;
+  const dateTo = state.allDataDateTo;
   const allItems = [];
   state.clients.forEach(c => {
     getItems(c.id).forEach(it => allItems.push({ ...it, _clientName: c.name, _clientId: c.id }));
   });
-  const filtered = !search ? allItems : allItems.filter(it =>
+  let filtered = allItems;
+  if (search) filtered = filtered.filter(it =>
     [it.customer_name, it.task, it.invoice_number, it.notes, it._clientName].some(v => (v||'').toLowerCase().includes(search))
   );
+  if (clientFilter) filtered = filtered.filter(it => it._clientId === clientFilter);
+  if (dateFrom) filtered = filtered.filter(it => (it.follow_up_date||'') >= dateFrom);
+  if (dateTo)   filtered = filtered.filter(it => (it.follow_up_date||'') <= dateTo);
   filtered.sort((a,b) => (a.follow_up_date||'').localeCompare(b.follow_up_date||''));
+
+  const clientOptions = state.clients.map(c =>
+    `<option value="${escapeHtml(c.id)}" ${clientFilter===c.id?'selected':''}>${escapeHtml(c.name)}</option>`
+  ).join('');
+
   return `
     <div class="all-data-screen">
       <div class="all-data-toolbar">
         <h2>📊 כל נתוני הגבייה (${filtered.length} רשומות)</h2>
-        <input class="search" id="allDataSearch" placeholder="🔎 חיפוש…" value="${escapeHtml(state.allDataSearch)}" />
         <button id="btnCloseAllData">← חזרה ללקוח</button>
+      </div>
+      <div class="all-data-filters">
+        <input class="search" id="allDataSearch" placeholder="🔎 חיפוש…" value="${escapeHtml(state.allDataSearch)}" />
+        <select id="allDataClientFilter">
+          <option value="">— כל הלקוחות —</option>
+          ${clientOptions}
+        </select>
+        <label style="font-size:13px;display:flex;align-items:center;gap:4px">מ:
+          <input type="date" id="allDataDateFrom" value="${escapeHtml(dateFrom)}" style="font-size:13px;padding:5px 8px" />
+        </label>
+        <label style="font-size:13px;display:flex;align-items:center;gap:4px">עד:
+          <input type="date" id="allDataDateTo" value="${escapeHtml(dateTo)}" style="font-size:13px;padding:5px 8px" />
+        </label>
+        ${(clientFilter||dateFrom||dateTo||search) ? `<button id="allDataClearFilters" style="font-size:12px">✖ נקה סינון</button>` : ''}
       </div>
       ${filtered.length === 0 ? '<p class="empty">אין רשומות.</p>' : `
         <div class="table-scroll">
@@ -721,10 +750,25 @@ function renderAllData() {
             <tbody>
               ${filtered.map(item => {
                 const overdue = isOverdue(item.follow_up_date);
-                return `<tr class="${overdue ? 'overdue' : ''}" data-id="${item.id}">
+                const editing = state.allDataEditingId === item.id;
+                if (editing) {
+                  return `<tr class="${overdue?'overdue':''}" data-id="${item.id}" data-client-id="${item._clientId}">
+                    <td><span class="client-col">${escapeHtml(item._clientName)}</span></td>
+                    ${COLUMNS.map(f => f.options
+                      ? `<td><select data-field="${f.key}">${f.options.map(o=>`<option value="${escapeHtml(o)}" ${(item[f.key]||'')=== o?'selected':''}>${escapeHtml(o)||'— בחרי —'}</option>`).join('')}</select></td>`
+                      : `<td dir="${f.dir||'auto'}"><input data-field="${f.key}" type="${f.type||'text'}" dir="${f.dir||'auto'}" value="${escapeHtml(item[f.key]||'')}" style="width:100%;min-width:80px" /></td>`
+                    ).join('')}
+                    <td class="actions-cell">
+                      <button class="adRowSave">💾</button>
+                      <button class="adRowCancel">✖️</button>
+                    </td>
+                  </tr>`;
+                }
+                return `<tr class="${overdue ? 'overdue' : ''}" data-id="${item.id}" data-client-id="${item._clientId}">
                   <td><span class="client-col">${escapeHtml(item._clientName)}</span></td>
                   ${COLUMNS.map(f => `<td dir="${f.dir||'auto'}">${escapeHtml(f.type==='date' ? isoToDisplay(item[f.key]||'') : (item[f.key]||''))}</td>`).join('')}
                   <td class="actions-cell">
+                    <button class="adRowEdit btn-link" title="עריכה">✏️</button>
                     <a class="btn-link wa" href="${buildWhatsAppLink(item)}" target="_blank" rel="noreferrer" title="וואטסאפ">💬</a>
                     <a class="btn-link mail" href="${buildMailtoLink(item)}" title="מייל">✉️</a>
                   </td>
@@ -1015,6 +1059,23 @@ function bindEvents() {
   $('#btnImport')?.addEventListener('click', doImport);
   $('#btnShowReminders')?.addEventListener('click', () => { state.showReminderPopup = true; render(); });
   $('#allDataSearch')?.addEventListener('input', e => { state.allDataSearch = e.target.value; render(); });
+  $('#allDataClientFilter')?.addEventListener('change', e => { state.allDataClientFilter = e.target.value; render(); });
+  $('#allDataDateFrom')?.addEventListener('change', e => { state.allDataDateFrom = e.target.value; render(); });
+  $('#allDataDateTo')?.addEventListener('change', e => { state.allDataDateTo = e.target.value; render(); });
+  $('#allDataClearFilters')?.addEventListener('click', () => { state.allDataSearch=''; state.allDataClientFilter=''; state.allDataDateFrom=''; state.allDataDateTo=''; render(); });
+  $$('.adRowEdit').forEach(b => b.addEventListener('click', e => { state.allDataEditingId = e.target.closest('[data-id]').dataset.id; render(); }));
+  $$('.adRowCancel').forEach(b => b.addEventListener('click', () => { state.allDataEditingId = null; render(); }));
+  $$('.adRowSave').forEach(b => b.addEventListener('click', e => {
+    const tr = e.target.closest('[data-id]');
+    const id = tr.dataset.id; const clientId = tr.dataset.clientId;
+    const client = state.clients.find(c => c.id === clientId); if (!client) return;
+    const items = getItems(clientId);
+    const item = items.find(it => it.id === id); if (!item) return;
+    tr.querySelectorAll('[data-field]').forEach(inp => { item[inp.dataset.field] = inp.value.trim(); });
+    item.updatedAt = nowIso();
+    setItems(clientId, items); state.allDataEditingId = null; render();
+    if (client.sheetId && isGoogleAuthorized()) pushSingleItem(client, item);
+  }));
 
   // Reminders bar
   $('#remindersToggle')?.addEventListener('click', () => { state.remindersOpen = !state.remindersOpen; render(); });
