@@ -130,6 +130,16 @@ td input{width:120px}
 'use strict';
 
 /* =========================== Constants ============================ */
+// Auto-import Client ID from URL param ?cid=... (used in shared links)
+(function() {
+  const p = new URLSearchParams(location.search).get('cid');
+  if (p && p.endsWith('.apps.googleusercontent.com') && !localStorage.getItem('collection_google_client_id')) {
+    localStorage.setItem('collection_google_client_id', p);
+    // Clean URL without reloading
+    const clean = location.pathname + location.hash;
+    history.replaceState(null, '', clean);
+  }
+})();
 const GOOGLE_CLIENT_ID = localStorage.getItem('collection_google_client_id') || '';
 const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
 
@@ -779,17 +789,23 @@ function renderGoogleSetup() {
 
 /* ---- Share ---- */
 function renderShare() {
-  const url = location.href.split('#')[0];
+  const base = location.origin + location.pathname;
+  // Build shared URL: include cid param so recipient auto-gets the Client ID
+  const sharedUrl = GOOGLE_CLIENT_ID
+    ? base + '?cid=' + encodeURIComponent(GOOGLE_CLIENT_ID)
+    : base;
+  const waText = encodeURIComponent('קישור לאפליקציית ניהול הגבייה: ' + sharedUrl);
   return `
     <div class="modal-backdrop" id="shareBackdrop">
       <div class="modal">
         <h2>שיתוף קישור לאפליקציה</h2>
-        <p class="hint">שלחי לעצמך כדי לפתוח מכל מכשיר.</p>
-        <div class="share-link">${escapeHtml(url)}</div>
-        <div class="qr-box"><img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}" /></div>
+        <p class="hint">שלחי את הקישור הזה למי שרוצה גישה לאפליקציה. בפתיחה הראשונה היא תצטרך <strong>רק</strong> ללחוץ "התחברות לחשבון Google" ולאשר — הכל אחר מוגדר אוטומטית.</p>
+        <div class="share-link">${escapeHtml(sharedUrl)}</div>
+        <div class="qr-box"><img alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(sharedUrl)}" /></div>
+        ${!GOOGLE_CLIENT_ID ? `<p class="error" style="font-size:13px">⚠️ לא הוגדר Client ID — יש להתחבר תחילה ל-Google כדי לקבל קישור משותף מלא.</p>` : ''}
         <div class="modal-actions">
-          <a class="btn-link wa" target="_blank" rel="noreferrer" href="https://wa.me/?text=${encodeURIComponent('קישור לאפליקציית ניהול הגבייה: ' + url)}">💬 וואטסאפ</a>
-          <a class="btn-link mail" href="mailto:?subject=${encodeURIComponent('ניהול גבייה')}&body=${encodeURIComponent(url)}">✉️ מייל</a>
+          <a class="btn-link wa" target="_blank" rel="noreferrer" href="https://wa.me/?text=${waText}">💬 וואטסאפ</a>
+          <a class="btn-link mail" href="mailto:?subject=${encodeURIComponent('ניהול גבייה')}&body=${encodeURIComponent(sharedUrl)}">✉️ מייל</a>
           <button id="closeShare">סגירה</button>
         </div>
       </div>
