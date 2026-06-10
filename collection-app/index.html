@@ -868,14 +868,14 @@ function renderClientManager() {
     <div class="modal-backdrop" id="clientBackdrop">
       <div class="modal">
         <h2>ניהול לקוחות</h2>
-        <p class="hint">כל לקוח מקושר לקובץ Google Sheets נפרד. חשוב: שם הלשונית בקובץ חייב להיות <strong>Sheet1</strong> (ברירת מחדל באנגלית).</p>
+        <p class="hint">כל לקוח מקושר לקובץ Google Sheets נפרד. שם הלשונית מופיע בתחתית קובץ ה-Sheets (לשונית). בחשבון עברית נקרא לרוב <strong>גיליון1</strong>, בחשבון אנגלית — <strong>Sheet1</strong>.</p>
         <form class="client-form" id="clientForm">
           <input type="hidden" name="editingId" value="${state.clientEditingId||''}" />
           <label>שם הלקוח <input name="name" placeholder="לדוגמה: קומפון" value="${escapeHtml(state.clientFormName||'')}" /></label>
           <label>קישור ל-Google Sheet (אופציונלי) <input name="sheetUrl" dir="ltr" placeholder="https://docs.google.com/spreadsheets/d/..." value="${escapeHtml(state.clientFormUrl||'')}" /></label>
           <label>שם הלשונית בשיטס
-            <input name="sheetTab" dir="ltr" placeholder="Sheet1" value="${escapeHtml(state.clientFormTab||'')}" />
-            <span style="font-size:12px;color:#888">אם אינך יודעת — פתחי את קובץ ה-Sheets וראי את השם בתחתית הדף (לשונית). ברירת מחדל: Sheet1</span>
+            <input name="sheetTab" dir="ltr" placeholder="גיליון1 / Sheet1" value="${escapeHtml(state.clientFormTab||'')}" />
+            <span style="font-size:12px;color:#888">פתחי את קובץ ה-Sheets וראי את השם בתחתית הדף (לשונית). בחשבון עברית: <strong>גיליון1</strong> | אנגלית: <strong>Sheet1</strong></span>
           </label>
           ${state.clientFormError ? `<div class="error">${escapeHtml(state.clientFormError)}</div>` : ''}
           <div class="form-actions">
