@@ -152,7 +152,7 @@ const COLUMNS = [
   { key: 'debt_amount',     header: 'סכום החוב' },
   { key: 'invoice_number',  header: "מס' חשבונית" },
   { key: 'balance_due',     header: 'יתרה לתשלום' },
-  { key: 'payment_method',  header: 'אמצעי תשלום' },
+  { key: 'payment_method',  header: 'אמצעי תשלום', options: ['', 'כרטיס אשראי', 'העברה בנקאית', 'ביט', 'מזומן', 'אחר'] },
   { key: 'notes',           header: 'הערות' },
 ];
 
@@ -598,7 +598,10 @@ function renderItemsTable(client) {
       </div>
       ${state.showAddForm ? `
         <form class="add-form" id="addForm">
-          ${COLUMNS.map(f => `<label>${f.header}<input name="${f.key}" type="${f.type||'text'}" dir="${f.dir||'auto'}" /></label>`).join('')}
+          ${COLUMNS.map(f => f.options
+            ? `<label>${f.header}<select name="${f.key}">${f.options.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)||'— בחרי —'}</option>`).join('')}</select></label>`
+            : `<label>${f.header}<input name="${f.key}" type="${f.type||'text'}" dir="${f.dir||'auto'}" /></label>`
+          ).join('')}
           <div class="form-actions"><button type="submit">💾 שמירה</button></div>
         </form>` : ''}
       ${filtered.length === 0 ? `<p class="empty">אין רשומות עדיין.</p>` : `
@@ -617,7 +620,10 @@ function renderItemRow(item, client, timedReminders) {
   const hasTimedRem = timedReminders.some(r => r.itemId === item.id && !r.fired);
   if (editing) {
     return `<tr class="${overdue?'overdue':''}" data-id="${item.id}">
-      ${COLUMNS.map(f => `<td dir="${f.dir||'auto'}"><input data-field="${f.key}" type="${f.type||'text'}" dir="${f.dir||'auto'}" value="${escapeHtml(item[f.key]||'')}" /></td>`).join('')}
+      ${COLUMNS.map(f => f.options
+        ? `<td><select data-field="${f.key}">${f.options.map(o => `<option value="${escapeHtml(o)}" ${(item[f.key]||'')=== o?'selected':''}>${escapeHtml(o)||'— בחרי —'}</option>`).join('')}</select></td>`
+        : `<td dir="${f.dir||'auto'}"><input data-field="${f.key}" type="${f.type||'text'}" dir="${f.dir||'auto'}" value="${escapeHtml(item[f.key]||'')}" /></td>`
+      ).join('')}
       <td class="actions-cell">
         <button class="rowSave" title="שמירה">💾</button>
         <button class="rowCancel" title="ביטול">✖️</button>
