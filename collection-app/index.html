@@ -284,7 +284,11 @@ async function ensureGoogleToken() {
 async function sheetsGet(id, range) {
   const ok = await ensureGoogleToken(); if (!ok) throw new Error('לא מחוברת לחשבון Google');
   const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(range)}`, { headers: { Authorization: `Bearer ${gAccessToken}` } });
-  if (!res.ok) throw new Error('שגיאה בקריאת הטבלה (' + res.status + ')');
+  if (!res.ok) {
+    let detail = '';
+    try { const j = await res.json(); detail = j?.error?.message || ''; } catch(e) {}
+    throw new Error('שגיאה בקריאת הטבלה (' + res.status + ')' + (detail ? ': ' + detail : ''));
+  }
   return res.json();
 }
 async function sheetsUpdate(id, range, values) {
