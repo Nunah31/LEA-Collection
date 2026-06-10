@@ -318,6 +318,11 @@ function rowToItem(row) {
     let v = row[i] ?? '';
     // Convert DD/MM/YYYY from Sheets → YYYY-MM-DD for internal storage
     if (c.type === 'date' && v) v = displayToIso(v) || v;
+    // Israeli phone numbers: Sheets strips leading zero (e.g. 523339795 → 0523339795)
+    if (c.key === 'customer_phone' && v) {
+      const s = String(v).trim();
+      if (/^5\d{8}$/.test(s)) v = '0' + s;   // 9 digits starting with 5
+    }
     o[c.key] = v;
   });
   return o;
