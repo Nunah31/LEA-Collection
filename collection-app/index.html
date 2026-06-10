@@ -187,6 +187,27 @@ function extractSheetId(input) {
   if (/^[a-zA-Z0-9-_]{20,}$/.test(input.trim())) return input.trim();
   return null;
 }
+function extractGid(input) {
+  if (!input) return null;
+  const m = input.match(/[?&#]gid=(\d+)/);
+  return m ? m[1] : null;
+}
+async function resolveTabName(sheetId, gid) {
+  // Ask Sheets API for spreadsheet metadata to find tab name by gid
+  if (!sheetId || !gid) return null;
+  try {
+    const ok = await ensureGoogleToken();
+    if (!ok) return null;
+    const res = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}?fields=sheets.properties`,
+      { headers: { Authorization: `Bearer ${gAccessToken}` } }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const sheet = (data.sheets || []).find(s => String(s.properties.sheetId) === String(gid));
+    return sheet ? sheet.properties.title : null;
+  } catch(e) { return null; }
+}
 
 /* =========================== Google auth ============================ */
 let gTokenClient = null;
@@ -943,7 +964,7 @@ function onSaveItem(tr) {
 }
 
 /* =========================== Client actions ============================ */
-function onClientFormSubmit(e) {
+async function onClientFormSubmit(e) {
   e.preventDefault();
   const fd = new FormData(e.target);
   const name = (fd.get('name')||'').toString().trim();
@@ -951,11 +972,27 @@ function onClientFormSubmit(e) {
   const editingId = (fd.get('editingId')||'').toString();
   if (!name) { state.clientFormError = 'יש להזין שם לקוח'; render(); return; }
   const sheetId = extractSheetId(sheetUrl);
+  const gid = extractGid(sheetUrl);
+
+  // Resolve tab name from gid if possible
+  state.clientFormError = sheetId && gid ? 'מזהה שם לשונית...' : '';
+  render();
+  let sheetTab = 'Sheet1';
+  if (sheetId && gid) {
+    const resolved = await resolveTabName(sheetId, gid);
+    if (resolved) {
+      sheetTab = resolved;
+    } else {
+      // Could not resolve — keep Sheet1 as fallback, warn user
+      state.clientFormError = 'לא הצלחנו לזהות את שם הלשונית אוטומטית. ודאי ששם הלשונית בשיטס הוא Sheet1, או ערכי את הלקוח לאחר ההתחברות ל-Google.';
+    }
+  }
+
   if (editingId) {
     const c = state.clients.find(x => x.id === editingId);
-    if (c) { c.name = name; c.sheetUrl = sheetUrl; c.sheetId = sheetId; }
+    if (c) { c.name = name; c.sheetUrl = sheetUrl; c.sheetId = sheetId; c.sheetTab = sheetTab; }
   } else {
-    state.clients.push({ id: uid(), name, sheetUrl, sheetId, sheetTab: 'Sheet1' });
+    state.clients.push({ id: uid(), name, sheetUrl, sheetId, sheetTab });
   }
   persistClients();
   state.clientEditingId = null; state.clientFormName = ''; state.clientFormUrl = ''; state.clientFormError = '';
