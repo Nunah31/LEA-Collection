@@ -305,9 +305,48 @@ async function sheetsBatchUpdate(id, data) {
 }
 async function sheetsAppend(id, range, values) {
   const ok = await ensureGoogleToken(); if (!ok) throw new Error('לא מחוברת לחשבון Google');
-  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=OVERWRITE`, { method: 'POST', headers: { Authorization: `Bearer ${gAccessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ values }) });
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=OVERWRITE&includeValuesInResponse=true`, { method: 'POST', headers: { Authorization: `Bearer ${gAccessToken}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ values }) });
   if (!res.ok) throw new Error('שגיאה בהוספת שורה לטבלה (' + res.status + ')');
-  return res.json();
+  const json = await res.json();
+  // Clear bold formatting on the written rows (best-effort)
+  try {
+    const updRange = json?.updates?.updatedRange; // e.g. "Sheet1!A5:J6"
+    if (updRange) {
+      const rowMatch = updRange.match(/(\d+):.*?(\d+)$/);
+      if (rowMatch) {
+        const startRow = parseInt(rowMatch[1]) - 1; // 0-based
+        const endRow = parseInt(rowMatch[2]);        // exclusive
+        await sheetsClearBold(id, range, startRow, endRow);
+      }
+    }
+  } catch(e) { /* best-effort */ }
+  return json;
+}
+
+// Clear bold formatting on a row range (0-based startRow, exclusive endRow)
+async function sheetsClearBold(spreadsheetId, rangeHint, startRow, endRow) {
+  // Get numeric sheetId from tab name
+  const tabMatch = rangeHint.match(/^'?([^'!]+)'?!/);
+  if (!tabMatch) return;
+  const tabName = tabMatch[1].replace(/''/g, "'");
+  try {
+    const meta = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties`,
+      { headers: { Authorization: `Bearer ${gAccessToken}` } });
+    if (!meta.ok) return;
+    const data = await meta.json();
+    const sheet = (data.sheets||[]).find(s => s.properties.title === tabName);
+    if (!sheet) return;
+    const numericSheetId = sheet.properties.sheetId;
+    await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${gAccessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requests: [{ repeatCell: {
+        range: { sheetId: numericSheetId, startRowIndex: startRow, endRowIndex: endRow },
+        cell: { userEnteredFormat: { textFormat: { bold: false } } },
+        fields: 'userEnteredFormat.textFormat.bold'
+      }}]})
+    });
+  } catch(e) { /* best-effort */ }
 }
 
 const RANGE_FOR = (tab) => `'${(tab || 'Sheet1').replace(/'/g, "''")}'!A1:J`;
