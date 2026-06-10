@@ -324,12 +324,13 @@ async function pushSingleItem(client, item) {
 
 /* =========================== Message helpers ============================ */
 function buildMessage(item) {
-  const name = item.customer_name || 'לקוח/ה יקר/ה';
+  const name = item.customer_name || '';
   const amount = item.balance_due || item.debt_amount;
-  let msg = `שלום ${name},\nתזכורת ידידותית בנוגע לחוב הפתוח`;
+  let msg = `הי${name ? ' ' + name : ''},\nמזכירה לך את שיחתנו בנוגע לחוב`;
   if (item.invoice_number) msg += ` (חשבונית מס' ${item.invoice_number})`;
-  if (amount) msg += `.\nהיתרה לתשלום עומדת על ${amount} ₪`;
-  msg += '.\nנשמח להסדרת התשלום בהקדם. תודה!';
+  msg += ',\n';
+  if (amount) msg += `היתרה לתשלום עומדת על ${amount} ₪.\n`;
+  msg += 'אשמח להעברת התשלום בהקדם. תודה!';
   return msg;
 }
 function normalizePhone(phone) {
