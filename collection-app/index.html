@@ -283,8 +283,35 @@ async function sheetsAppend(id, range, values) {
 }
 
 const RANGE_FOR = (tab) => `'${(tab || 'Sheet1').replace(/'/g, "''")}'!A1:J`;
-function rowToItem(row) { const o = {}; COLUMNS.forEach((c,i) => o[c.key] = row[i] ?? ''); return o; }
-function itemToRow(item) { return COLUMNS.map((c) => item[c.key] ?? ''); }
+// Date helpers: store internally as YYYY-MM-DD, display/export as DD/MM/YYYY
+function isoToDisplay(d) {
+  if (!d) return '';
+  const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : d;
+}
+function displayToIso(d) {
+  if (!d) return '';
+  const m = d.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : d;
+}
+
+function rowToItem(row) {
+  const o = {};
+  COLUMNS.forEach((c, i) => {
+    let v = row[i] ?? '';
+    // Convert DD/MM/YYYY from Sheets → YYYY-MM-DD for internal storage
+    if (c.type === 'date' && v) v = displayToIso(v) || v;
+    o[c.key] = v;
+  });
+  return o;
+}
+function itemToRow(item) {
+  return COLUMNS.map((c) => {
+    const v = item[c.key] ?? '';
+    // Convert YYYY-MM-DD → DD/MM/YYYY for Sheets
+    return (c.type === 'date' && v) ? isoToDisplay(v) || v : v;
+  });
+}
 function rowsEqual(a, b) { return COLUMNS.every((c) => (a[c.key] ?? '') === (b[c.key] ?? '')); }
 
 /* =========================== Sync (App → Sheets only) ============================ */
@@ -565,7 +592,7 @@ function render() {
             <ul class="reminders-list">
               ${reminders.map(r => `
                 <li data-client="${r.client_id}">
-                  <span class="rem-date">${escapeHtml(r.follow_up_date)}</span>
+                  <span class="rem-date">${escapeHtml(isoToDisplay(r.follow_up_date))}</span>
                   <span class="rem-client">${escapeHtml(r.client_name)}</span>
                   <span class="rem-name">${escapeHtml(r.customer_name || '—')}</span>
                   <span class="rem-task">${escapeHtml(r.task || '')}</span>
@@ -624,7 +651,7 @@ function renderAllData() {
                 const overdue = isOverdue(item.follow_up_date);
                 return `<tr class="${overdue ? 'overdue' : ''}" data-id="${item.id}">
                   <td><span class="client-col">${escapeHtml(item._clientName)}</span></td>
-                  ${COLUMNS.map(f => `<td dir="${f.dir||'auto'}">${escapeHtml(item[f.key]||'')}</td>`).join('')}
+                  ${COLUMNS.map(f => `<td dir="${f.dir||'auto'}">${escapeHtml(f.type==='date' ? isoToDisplay(item[f.key]||'') : (item[f.key]||''))}</td>`).join('')}
                   <td class="actions-cell">
                     <a class="btn-link wa" href="${buildWhatsAppLink(item)}" target="_blank" rel="noreferrer" title="וואטסאפ">💬</a>
                     <a class="btn-link mail" href="${buildMailtoLink(item)}" title="מייל">✉️</a>
@@ -686,7 +713,7 @@ function renderItemRow(item, client, timedReminders) {
       </td></tr>`;
   }
   return `<tr class="${overdue?'overdue':''}" data-id="${item.id}">
-    ${COLUMNS.map(f => `<td dir="${f.dir||'auto'}">${escapeHtml(item[f.key]||'')}</td>`).join('')}
+    ${COLUMNS.map(f => `<td dir="${f.dir||'auto'}">${escapeHtml(f.type==='date' ? isoToDisplay(item[f.key]||'') : (item[f.key]||''))}</td>`).join('')}
     <td class="actions-cell">
       <button class="rowEdit" title="עריכה">✏️</button>
       <button class="rowDelete danger" title="מחיקה">🗑</button>
@@ -707,7 +734,7 @@ function renderOverduePopup(reminders) {
         <ul class="rp-list">
           ${reminders.map(r => `<li>
             <div class="rp-meta">
-              <span class="rp-date-tag">${r.follow_up_date < today ? '⚠️ ' : ''}${escapeHtml(r.follow_up_date)}</span>
+              <span class="rp-date-tag">${r.follow_up_date < today ? '⚠️ ' : ''}${escapeHtml(isoToDisplay(r.follow_up_date))}</span>
               <span class="rp-client-tag">${escapeHtml(r.client_name)}</span>
             </div>
             <div class="rp-name">${escapeHtml(r.customer_name||'—')}</div>
