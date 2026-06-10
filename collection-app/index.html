@@ -199,8 +199,15 @@ function nowLocalDatetime() {
 
 function extractSheetId(input) {
   if (!input) return null;
-  const m = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-  if (m) return m[1];
+  // Sheets URL: /spreadsheets/d/ID
+  const m1 = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if (m1) return m1[1];
+  // Drive URL: /file/d/ID or /open?id=ID or id= param
+  const m2 = input.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
+  if (m2) return m2[1];
+  const m3 = input.match(/[?&]id=([a-zA-Z0-9-_]+)/);
+  if (m3) return m3[1];
+  // Raw ID
   if (/^[a-zA-Z0-9-_]{20,}$/.test(input.trim())) return input.trim();
   return null;
 }
