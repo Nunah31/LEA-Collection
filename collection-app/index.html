@@ -287,7 +287,9 @@ function rowToItem(row) { const o = {}; COLUMNS.forEach((c,i) => o[c.key] = row[
 function itemToRow(item) { return COLUMNS.map((c) => item[c.key] ?? ''); }
 function rowsEqual(a, b) { return COLUMNS.every((c) => (a[c.key] ?? '') === (b[c.key] ?? '')); }
 
-/* =========================== Sync ============================ */
+/* =========================== Sync (App → Sheets only) ============================ */
+
+// Push all local items to Sheets (new ones appended, changed ones updated)
 async function syncClient(client) {
   if (!client.sheetId) throw new Error('ללקוח אין קישור ל-Google Sheet');
   const tab = client.sheetTab || 'Sheet1';
@@ -295,51 +297,79 @@ async function syncClient(client) {
   const res = await sheetsGet(client.sheetId, range);
   const values = res.values || [];
   const dataRows = values.slice(1);
-  let local = getItems(client.id);
-  const bySheetRow = new Map(local.filter(i => i.sheetRow != null).map(i => [i.sheetRow, i]));
-  const lastSync = getLastSync(client.id);
-  let pulled = 0, updated = 0;
-  const seen = new Set();
-  for (let i = 0; i < dataRows.length; i++) {
-    const sheetRow = i + 2;
-    const row = dataRows[i];
-    if (!row || row.every(v => !v || String(v).trim() === '')) continue;
-    seen.add(sheetRow);
-    const sheetItem = rowToItem(row);
-    const loc = bySheetRow.get(sheetRow);
-    if (!loc) { local.push({ id: uid(), sheetRow, updatedAt: nowIso(), ...sheetItem }); pulled++; }
-    else if (!rowsEqual(loc, sheetItem)) {
-      const localChanged = !lastSync || (loc.updatedAt && loc.updatedAt > lastSync);
-      if (!localChanged) { Object.assign(loc, sheetItem); loc.updatedAt = nowIso(); updated++; }
-    }
-  }
+  const local = getItems(client.id);
+
+  // Append new items (no sheetRow yet)
   const toAppend = local.filter(it => it.sheetRow == null);
   if (toAppend.length) {
     await sheetsAppend(client.sheetId, range, toAppend.map(itemToRow));
     toAppend.forEach((it, idx) => { it.sheetRow = values.length + 1 + idx; });
   }
+
+  // Update locally-changed items
   const toUpdate = local.filter(it => {
     if (it.sheetRow == null || toAppend.includes(it)) return false;
-    const localChanged = !lastSync || (it.updatedAt && it.updatedAt > lastSync);
-    if (!localChanged) return false;
-    const sheetRow = dataRows[it.sheetRow - 2];
-    return !sheetRow || !rowsEqual(it, rowToItem(sheetRow));
+    const sheetRowData = dataRows[it.sheetRow - 2];
+    return !sheetRowData || !rowsEqual(it, rowToItem(sheetRowData));
   });
-  if (toUpdate.length) await sheetsBatchUpdate(client.sheetId, toUpdate.map(it => ({ range: `${tab}!A${it.sheetRow}:J${it.sheetRow}`, values: [itemToRow(it)] })));
+  if (toUpdate.length) {
+    await sheetsBatchUpdate(client.sheetId, toUpdate.map(it => ({
+      range: `${RANGE_FOR(tab).split('!')[0]}!A${it.sheetRow}:J${it.sheetRow}`,
+      values: [itemToRow(it)]
+    })));
+  }
+
   setItems(client.id, local);
-  setLastSync(client.id);
-  return { pulled, updated, pushedNew: toAppend.length, pushedUpdates: toUpdate.length };
+  return { pushedNew: toAppend.length, pushedUpdates: toUpdate.length };
 }
+
+// Import rows from Sheets into app (additive only — never deletes local items)
+async function importFromSheet(client) {
+  if (!client.sheetId) throw new Error('ללקוח אין קישור ל-Google Sheet');
+  const tab = client.sheetTab || 'Sheet1';
+  const res = await sheetsGet(client.sheetId, RANGE_FOR(tab));
+  const values = res.values || [];
+  const dataRows = values.slice(1);
+  const local = getItems(client.id);
+  const bySheetRow = new Map(local.filter(i => i.sheetRow != null).map(i => [i.sheetRow, i]));
+  let imported = 0;
+  for (let i = 0; i < dataRows.length; i++) {
+    const sheetRow = i + 2;
+    const row = dataRows[i];
+    if (!row || row.every(v => !v || String(v).trim() === '')) continue;
+    if (!bySheetRow.has(sheetRow)) {
+      local.push({ id: uid(), sheetRow, updatedAt: nowIso(), ...rowToItem(row) });
+      imported++;
+    }
+    // If already exists locally → keep local version, don't overwrite
+  }
+  setItems(client.id, local);
+  return { imported };
+}
+
+// Push a single item immediately after add/edit
 async function pushSingleItem(client, item) {
   if (!client.sheetId || !isGoogleAuthorized()) return;
   const tab = client.sheetTab || 'Sheet1';
+  const tabPrefix = RANGE_FOR(tab).split('!')[0];
   try {
-    if (item.sheetRow) await sheetsUpdate(client.sheetId, `${tab}!A${item.sheetRow}:J${item.sheetRow}`, [itemToRow(item)]);
-    else {
+    if (item.sheetRow) {
+      await sheetsUpdate(client.sheetId, `${tabPrefix}!A${item.sheetRow}:J${item.sheetRow}`, [itemToRow(item)]);
+    } else {
       const res = await sheetsGet(client.sheetId, RANGE_FOR(tab));
       await sheetsAppend(client.sheetId, RANGE_FOR(tab), [itemToRow(item)]);
       item.sheetRow = (res.values || []).length + 1;
     }
+  } catch(e) { /* best-effort */ }
+}
+
+// Clear a row in Sheets when item is deleted in app
+async function clearSheetRow(client, item) {
+  if (!client.sheetId || !item.sheetRow || !isGoogleAuthorized()) return;
+  const tabPrefix = RANGE_FOR(client.sheetTab || 'Sheet1').split('!')[0];
+  try {
+    await sheetsUpdate(client.sheetId, `${tabPrefix}!A${item.sheetRow}:J${item.sheetRow}`,
+      [['', '', '', '', '', '', '', '', '', '']]);
   } catch(e) { /* best-effort */ }
 }
 
@@ -510,7 +540,10 @@ function render() {
           <button id="btnAllData" class="${state.showAllData ? 'primary' : ''}">📊 כל הנתונים</button>
           <button id="btnClients">⚙️ ניהול לקוחות</button>
           <button id="btnGoogle" class="${isGoogleAuthorized() ? 'connected' : ''}">${isGoogleAuthorized() ? '🟢 מחובר' : '🔌 חיבור Google'}</button>
-          ${!state.showAllData && ac?.sheetId ? `<button id="btnSync" ${state.syncing ? 'disabled' : ''}>${state.syncing ? 'מסנכרן…' : '🔄 סנכרן'}</button>` : ''}
+          ${!state.showAllData && ac?.sheetId ? `
+            <button id="btnSync" ${state.syncing ? 'disabled' : ''}>${state.syncing ? 'שולח…' : '🔄 שמור לשיטס'}</button>
+            <button id="btnImport" ${state.syncing ? 'disabled' : ''} title="ייבא שורות מהשיטס לאפליקציה (לא מוחק נתונים קיימים)">📥 יבוא מהשיטס</button>
+          ` : ''}
           ${reminders.length ? `<button id="btnShowReminders" title="תזכורות ממתינות" style="background:#fff7e6;border-color:#f0c779;font-size:16px">🔔 ${reminders.length}</button>` : ''}
           <button id="btnShare">🔗 שיתוף</button>
         </div>
@@ -859,6 +892,7 @@ function bindEvents() {
   $('#btnGoogle')?.addEventListener('click', () => { state.showGoogleSetup = true; render(); });
   $('#btnShare')?.addEventListener('click', () => { state.showShare = true; render(); });
   $('#btnSync')?.addEventListener('click', doSync);
+  $('#btnImport')?.addEventListener('click', doImport);
   $('#btnShowReminders')?.addEventListener('click', () => { state.showReminderPopup = true; render(); });
   $('#allDataSearch')?.addEventListener('input', e => { state.allDataSearch = e.target.value; render(); });
 
@@ -950,11 +984,13 @@ function onAddItem(e) {
 function onDeleteItem(id) {
   if (!confirm('למחוק את הרשומה?')) return;
   const client = activeClient();
-  let items = getItems(client.id).filter(it => it.id !== id);
-  setItems(client.id, items);
-  // also delete any timed reminders for this item
+  const items = getItems(client.id);
+  const item = items.find(it => it.id === id);
+  setItems(client.id, items.filter(it => it.id !== id));
   setTimedReminders(getTimedReminders().filter(r => r.itemId !== id));
   render();
+  // Clear row in Sheets (best-effort, doesn't block UI)
+  if (item) clearSheetRow(client, item);
 }
 function onSaveItem(tr) {
   const client = activeClient();
@@ -1026,15 +1062,33 @@ async function doSync() {
   const client = activeClient();
   if (!client?.sheetId) { state.syncMsg = 'ללקוח זה אין קישור ל-Google Sheet'; render(); return; }
   if (!GOOGLE_CLIENT_ID) { state.showGoogleSetup = true; render(); return; }
-  state.syncing = true; state.syncMsg = 'מסנכרן...'; render();
+  state.syncing = true; state.syncMsg = 'שומר לשיטס...'; render();
   try {
     const r = await syncClient(client);
-    state.syncMsg = `סונכרן ✓ (${r.pulled} חדשים מהטבלה, ${r.pushedNew} נשלחו, ${r.updated + r.pushedUpdates} עודכנו)`;
+    state.syncMsg = `נשמר ✓ (${r.pushedNew} שורות חדשות נשלחו, ${r.pushedUpdates} עודכנו)`;
   } catch(e) {
-    state.syncMsg = 'שגיאת סנכרון: ' + e.message;
+    state.syncMsg = 'שגיאה: ' + e.message;
   } finally {
     state.syncing = false; render();
-    setTimeout(() => { state.syncMsg = ''; render(); }, 6000);
+    setTimeout(() => { state.syncMsg = ''; render(); }, 5000);
+  }
+}
+
+async function doImport() {
+  const client = activeClient();
+  if (!client?.sheetId) { state.syncMsg = 'ללקוח זה אין קישור ל-Google Sheet'; render(); return; }
+  if (!GOOGLE_CLIENT_ID) { state.showGoogleSetup = true; render(); return; }
+  state.syncing = true; state.syncMsg = 'מייבא מהשיטס...'; render();
+  try {
+    const r = await importFromSheet(client);
+    state.syncMsg = r.imported > 0
+      ? `יובאו ✓ ${r.imported} שורות חדשות מהשיטס`
+      : 'אין שורות חדשות לייבוא מהשיטס';
+  } catch(e) {
+    state.syncMsg = 'שגיאת ייבוא: ' + e.message;
+  } finally {
+    state.syncing = false; render();
+    setTimeout(() => { state.syncMsg = ''; render(); }, 5000);
   }
 }
 
@@ -1051,7 +1105,7 @@ window.addEventListener('load', () => {
   initGoogleAuth();
   render();
   setTimeout(checkAndShowOverdueReminders, 1200);
-  // auto-sync every 60s
+  // auto-push to Sheets every 60s (app → sheets only)
   setInterval(() => {
     const c = activeClient();
     if (c?.sheetId && isGoogleAuthorized() && !state.syncing) doSync();
