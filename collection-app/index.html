@@ -348,7 +348,8 @@ function buildWhatsAppLink(item) {
 function buildMailtoLink(item) {
   const subject = encodeURIComponent(`תזכורת לתשלום${item.invoice_number ? ' - חשבונית ' + item.invoice_number : ''}`);
   const body = encodeURIComponent(buildMessage(item));
-  return `mailto:${item.customer_email || ''}?subject=${subject}&body=${body}`;
+  // Opens Gmail compose directly instead of the default mail app
+  return `https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(item.customer_email || '')}&su=${subject}&body=${body}`;
 }
 function isOverdue(d) { return !!d && d <= todayStr(); }
 function escapeHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
