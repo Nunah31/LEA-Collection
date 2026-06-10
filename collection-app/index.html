@@ -1096,18 +1096,14 @@ async function onClientFormSubmit(e) {
   const gid = extractGid(sheetUrl);
   const manualTab = (fd.get('sheetTab')||'').toString().trim();
 
-  // Determine tab name: manual entry wins; else try to resolve from gid; else default Sheet1
+  // Determine tab name: gid in URL wins (API resolves exact name); manual is fallback
   let sheetTab = manualTab || 'Sheet1';
-  if (!manualTab && sheetId && gid) {
+  if (sheetId && gid) {
     state.clientFormError = 'מזהה שם לשונית אוטומטית...';
     render();
     const resolved = await resolveTabName(sheetId, gid);
-    if (resolved) {
-      sheetTab = resolved;
-      state.clientFormError = '';
-    } else {
-      state.clientFormError = '';
-    }
+    if (resolved) sheetTab = resolved;
+    state.clientFormError = '';
   }
 
   if (editingId) {
