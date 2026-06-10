@@ -40,28 +40,45 @@ a{color:#2563eb}
 .rem-client{font-weight:600;min-width:110px}
 .rem-name{color:#555}
 .rem-task{color:#888;flex:1}
-/* table */
+/* table wrap */
 .items-table-wrap{background:#fff;border-radius:12px;padding:16px;border:1px solid #e3e5ea}
 .table-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .table-toolbar h2{margin:0;font-size:18px;flex:1}
-.search{min-width:240px}
-.add-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;background:#f8f9fc;border:1px solid #e3e5ea;border-radius:10px;padding:14px;margin-bottom:16px}
-.add-form label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:#555}
+.search{min-width:200px}
+.add-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;background:#f8f9fc;border:1px solid #e3e5ea;border-radius:10px;padding:12px;margin-bottom:14px}
+.add-form label{display:flex;flex-direction:column;gap:3px;font-size:13px;color:#555}
 .add-form .form-actions{grid-column:1/-1}
-.table-scroll{overflow-x:auto}
-table{border-collapse:collapse;width:100%;font-size:13.5px}
-th,td{padding:8px 10px;border-bottom:1px solid #eee;text-align:right;white-space:nowrap}
-th{background:#f8f9fc;position:sticky;top:0;font-weight:600;color:#444}
-tr.overdue td:nth-child(2){color:#b3261e;font-weight:700}
-tr.overdue{background:#fff7f7}
-td input{width:120px}
-.actions-cell{display:flex;gap:4px;white-space:nowrap}
-.btn-link{display:inline-flex;align-items:center;justify-content:center;border:1px solid #cfd3da;border-radius:8px;padding:6px 9px;text-decoration:none;background:#fff}
+/* card list */
+.cards-list{display:flex;flex-direction:column;gap:8px}
+.item-card{border:1px solid #e3e5ea;border-radius:10px;background:#fff;overflow:hidden}
+.item-card.overdue{border-color:#f5c2c2;background:#fff7f7}
+.card-row1{display:grid;grid-template-columns:1fr 110px 140px 130px 1fr;gap:0;border-bottom:1px solid #f0f0f0}
+.card-row2{display:grid;grid-template-columns:110px 120px 120px 1fr 1fr;gap:0;border-bottom:1px solid #f0f0f0}
+.card-actions{display:flex;gap:6px;padding:6px 10px;align-items:center;flex-wrap:wrap;background:#fafbfc}
+.cf{padding:5px 10px;font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cf-label{font-size:10px;color:#999;margin-bottom:1px}
+.cf-val{font-weight:500;color:#1a1a2e}
+.cf-val.red{color:#b3261e;font-weight:700}
+.cf + .cf{border-right:1px solid #f0f0f0}
+/* edit mode card */
+.card-edit{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;padding:10px;background:#f8f9fc;border-bottom:1px solid #e3e5ea}
+.card-edit label{display:flex;flex-direction:column;gap:2px;font-size:12px;color:#555}
+.card-edit input,.card-edit select{font-size:13px;padding:5px 8px}
+.card-edit-actions{display:flex;gap:6px;padding:8px 10px;background:#f0f2f8}
+/* buttons */
+.btn-link{display:inline-flex;align-items:center;gap:4px;border:1px solid #cfd3da;border-radius:7px;padding:5px 10px;text-decoration:none;background:#fff;font-size:13px;cursor:pointer;font-family:inherit}
 .btn-link.wa:hover{background:#e7f9ee;border-color:#67c587}
 .btn-link.mail:hover{background:#eef4ff;border-color:#93b8ff}
-.btn-bell{background:none;border:1px solid #cfd3da;border-radius:8px;padding:5px 8px;font-size:15px;line-height:1}
+.btn-bell{background:none;border:1px solid #cfd3da;border-radius:7px;padding:4px 8px;font-size:14px;line-height:1}
 .btn-bell.has-reminder{border-color:#f0c779;background:#fffbf0}
-.empty{color:#888}
+.empty{color:#888;padding:20px;text-align:center}
+/* all data table */
+.table-scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:6px 8px;border-bottom:1px solid #eee;text-align:right;white-space:nowrap}
+th{background:#f8f9fc;position:sticky;top:0;font-weight:600;color:#444}
+tr.overdue{background:#fff7f7}
+tr.overdue td:nth-child(3){color:#b3261e;font-weight:700}
 /* modals */
 .modal-backdrop{position:fixed;inset:0;background:rgba(20,20,30,.4);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
 .modal{background:#fff;border-radius:14px;padding:22px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto}
@@ -688,39 +705,60 @@ function renderItemsTable(client) {
           <div class="form-actions"><button type="submit">💾 שמירה</button></div>
         </form>` : ''}
       ${filtered.length === 0 ? `<p class="empty">אין רשומות עדיין.</p>` : `
-        <div class="table-scroll">
-          <table>
-            <thead><tr>${COLUMNS.map(f => `<th>${f.header}</th>`).join('')}<th>פעולות</th></tr></thead>
-            <tbody>${filtered.map(item => renderItemRow(item, client, timedReminders)).join('')}</tbody>
-          </table>
+        <div class="cards-list">
+          ${filtered.map(item => renderItemCard(item, client, timedReminders)).join('')}
         </div>`}
     </div>`;
 }
 
-function renderItemRow(item, client, timedReminders) {
+function renderItemCard(item, client, timedReminders) {
   const editing = state.editingId === item.id;
   const overdue = isOverdue(item.follow_up_date);
   const hasTimedRem = timedReminders.some(r => r.itemId === item.id && !r.fired);
   if (editing) {
-    return `<tr class="${overdue?'overdue':''}" data-id="${item.id}">
-      ${COLUMNS.map(f => f.options
-        ? `<td><select data-field="${f.key}">${f.options.map(o => `<option value="${escapeHtml(o)}" ${(item[f.key]||'')=== o?'selected':''}>${escapeHtml(o)||'— בחרי —'}</option>`).join('')}</select></td>`
-        : `<td dir="${f.dir||'auto'}"><input data-field="${f.key}" type="${f.type||'text'}" dir="${f.dir||'auto'}" value="${escapeHtml(item[f.key]||'')}" /></td>`
-      ).join('')}
-      <td class="actions-cell">
-        <button class="rowSave" title="שמירה">💾</button>
-        <button class="rowCancel" title="ביטול">✖️</button>
-      </td></tr>`;
+    return `<div class="item-card${overdue?' overdue':''}" data-id="${item.id}">
+      <div class="card-edit">
+        ${COLUMNS.map(f => f.options
+          ? `<label>${f.header}<select data-field="${f.key}">${f.options.map(o => `<option value="${escapeHtml(o)}" ${(item[f.key]||'')=== o?'selected':''}>${escapeHtml(o)||'— בחרי —'}</option>`).join('')}</select></label>`
+          : `<label>${f.header}<input data-field="${f.key}" type="${f.type||'text'}" dir="${f.dir||'auto'}" value="${escapeHtml(item[f.key]||'')}" /></label>`
+        ).join('')}
+      </div>
+      <div class="card-edit-actions">
+        <button class="rowSave">💾 שמירה</button>
+        <button class="rowCancel">✖️ ביטול</button>
+      </div>
+    </div>`;
   }
-  return `<tr class="${overdue?'overdue':''}" data-id="${item.id}">
-    ${COLUMNS.map(f => `<td dir="${f.dir||'auto'}">${escapeHtml(f.type==='date' ? isoToDisplay(item[f.key]||'') : (item[f.key]||''))}</td>`).join('')}
-    <td class="actions-cell">
-      <button class="rowEdit" title="עריכה">✏️</button>
-      <button class="rowDelete danger" title="מחיקה">🗑</button>
-      <a class="btn-link wa" href="${buildWhatsAppLink(item)}" target="_blank" rel="noreferrer" title="וואטסאפ">💬</a>
-      <a class="btn-link mail" href="${buildMailtoLink(item)}" title="מייל">✉️</a>
-      <button class="btn-bell rowSetReminder ${hasTimedRem?'has-reminder':''}" data-item-id="${item.id}" data-client-id="${client.id}" title="${hasTimedRem?'יש תזכורת מתוזמנת':'הגדרת תזכורת עם שעה'}">⏰</button>
-    </td></tr>`;
+  const row1 = [
+    {key:'task', header:'משימה'},
+    {key:'follow_up_date', header:'תאריך מעקב', date:true},
+    {key:'customer_name', header:'שם לקוח'},
+    {key:'customer_phone', header:'נייד', dir:'ltr'},
+    {key:'customer_email', header:'מייל', dir:'ltr'},
+  ];
+  const row2 = [
+    {key:'debt_amount', header:'סכום חוב'},
+    {key:'invoice_number', header:"מס' חשבונית"},
+    {key:'balance_due', header:'יתרה'},
+    {key:'payment_method', header:'אמצעי תשלום'},
+    {key:'notes', header:'הערות'},
+  ];
+  const cell = ({key,header,date,dir}) => {
+    const val = date ? isoToDisplay(item[key]||'') : (item[key]||'');
+    const red = key==='follow_up_date' && overdue ? ' red' : '';
+    return `<div class="cf" dir="${dir||'auto'}"><div class="cf-label">${header}</div><div class="cf-val${red}">${escapeHtml(val)||'—'}</div></div>`;
+  };
+  return `<div class="item-card${overdue?' overdue':''}" data-id="${item.id}">
+    <div class="card-row1">${row1.map(cell).join('')}</div>
+    <div class="card-row2">${row2.map(cell).join('')}</div>
+    <div class="card-actions">
+      <button class="rowEdit btn-link" title="עריכה">✏️ עריכה</button>
+      <button class="rowDelete danger btn-link" title="מחיקה">🗑 מחיקה</button>
+      <a class="btn-link wa" href="${buildWhatsAppLink(item)}" target="_blank" rel="noreferrer">💬 וואטסאפ</a>
+      <a class="btn-link mail" href="${buildMailtoLink(item)}">✉️ מייל</a>
+      <button class="btn-bell rowSetReminder ${hasTimedRem?'has-reminder':''}" data-item-id="${item.id}" data-client-id="${client.id}" title="${hasTimedRem?'יש תזכורת מתוזמנת':'הגדרת תזכורת עם שעה'}">⏰${hasTimedRem?' ✓':''}</button>
+    </div>
+  </div>`;
 }
 
 /* ---- Overdue reminder popup ---- */
@@ -935,10 +973,10 @@ function bindEvents() {
   $('#searchInput')?.addEventListener('input', e => { state.search = e.target.value; render(); });
   $('#btnToggleAdd')?.addEventListener('click', () => { state.showAddForm = !state.showAddForm; render(); });
   $('#addForm')?.addEventListener('submit', onAddItem);
-  $$('.rowEdit').forEach(b => b.addEventListener('click', e => { state.editingId = e.target.closest('tr').dataset.id; render(); }));
+  $$('.rowEdit').forEach(b => b.addEventListener('click', e => { state.editingId = e.target.closest('[data-id]').dataset.id; render(); }));
   $$('.rowCancel').forEach(b => b.addEventListener('click', () => { state.editingId = null; render(); }));
-  $$('.rowDelete').forEach(b => b.addEventListener('click', e => onDeleteItem(e.target.closest('tr').dataset.id)));
-  $$('.rowSave').forEach(b => b.addEventListener('click', e => onSaveItem(e.target.closest('tr'))));
+  $$('.rowDelete').forEach(b => b.addEventListener('click', e => onDeleteItem(e.target.closest('[data-id]').dataset.id)));
+  $$('.rowSave').forEach(b => b.addEventListener('click', e => onSaveItem(e.target.closest('[data-id]'))));
   $$('.rowSetReminder').forEach(b => b.addEventListener('click', e => {
     state.timedReminderItemId = b.dataset.itemId;
     state.timedReminderClientId = b.dataset.clientId;
